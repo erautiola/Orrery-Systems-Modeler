@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xmi:XMI xmi:version="2.1"
+  xmlns:xmi="http://schema.omg.org/spec/XMI/2.1"
+  xmlns:uml="http://schema.omg.org/spec/UML/2.1">
+ <uml:Model xmi:type="uml:Model" name="LibrarySystem">
+  <packagedElement xmi:type="uml:Package" name="domain" xmi:id="pkg_domain">
+
+   <packagedElement xmi:type="uml:PrimitiveType" name="String" xmi:id="t_string"/>
+   <packagedElement xmi:type="uml:PrimitiveType" name="Integer" xmi:id="t_int"/>
+   <packagedElement xmi:type="uml:PrimitiveType" name="Date" xmi:id="t_date"/>
+   <packagedElement xmi:type="uml:PrimitiveType" name="Boolean" xmi:id="t_bool"/>
+
+   <packagedElement xmi:type="uml:Enumeration" name="ItemStatus" xmi:id="e_status">
+     <ownedLiteral xmi:type="uml:EnumerationLiteral" name="Available" xmi:id="l1"/>
+     <ownedLiteral xmi:type="uml:EnumerationLiteral" name="OnLoan" xmi:id="l2"/>
+     <ownedLiteral xmi:type="uml:EnumerationLiteral" name="Reserved" xmi:id="l3"/>
+     <ownedLiteral xmi:type="uml:EnumerationLiteral" name="Lost" xmi:id="l4"/>
+   </packagedElement>
+
+   <packagedElement xmi:type="uml:Interface" name="Searchable" xmi:id="i_search">
+     <ownedOperation xmi:type="uml:Operation" name="matches" xmi:id="io1" visibility="public">
+       <ownedParameter name="query" type="t_string" direction="in"/>
+       <ownedParameter name="result" type="t_bool" direction="return"/>
+     </ownedOperation>
+   </packagedElement>
+
+   <packagedElement xmi:type="uml:Class" name="LibraryItem" xmi:id="c_item" isAbstract="true">
+     <ownedAttribute xmi:type="uml:Property" name="title" xmi:id="a_title" type="t_string" visibility="protected"/>
+     <ownedAttribute xmi:type="uml:Property" name="catalogId" xmi:id="a_cid" type="t_string" visibility="protected"/>
+     <ownedAttribute xmi:type="uml:Property" name="status" xmi:id="a_status" type="e_status" visibility="protected"/>
+     <ownedOperation xmi:type="uml:Operation" name="checkOut" xmi:id="op_co" visibility="public" isAbstract="true"/>
+     <ownedOperation xmi:type="uml:Operation" name="checkIn" xmi:id="op_ci" visibility="public"/>
+   </packagedElement>
+
+   <packagedElement xmi:type="uml:Class" name="Book" xmi:id="c_book">
+     <generalization xmi:type="uml:Generalization" xmi:id="g_book" general="c_item"/>
+     <interfaceRealization xmi:type="uml:InterfaceRealization" xmi:id="r_book" contract="i_search"/>
+     <ownedAttribute xmi:type="uml:Property" name="isbn" xmi:id="bk1" type="t_string"/>
+     <ownedAttribute xmi:type="uml:Property" name="author" xmi:id="bk2" type="t_string"/>
+     <ownedAttribute xmi:type="uml:Property" name="pages" xmi:id="bk3" type="t_int"/>
+     <ownedOperation xmi:type="uml:Operation" name="checkOut" xmi:id="bk_op"/>
+   </packagedElement>
+
+   <packagedElement xmi:type="uml:Class" name="DVD" xmi:id="c_dvd">
+     <generalization xmi:type="uml:Generalization" xmi:id="g_dvd" general="c_item"/>
+     <ownedAttribute xmi:type="uml:Property" name="runtimeMinutes" xmi:id="dv1" type="t_int"/>
+     <ownedAttribute xmi:type="uml:Property" name="region" xmi:id="dv2" type="t_int"/>
+   </packagedElement>
+
+   <packagedElement xmi:type="uml:Class" name="Member" xmi:id="c_member">
+     <ownedAttribute xmi:type="uml:Property" name="name" xmi:id="m1" type="t_string"/>
+     <ownedAttribute xmi:type="uml:Property" name="memberId" xmi:id="m2" type="t_string"/>
+     <ownedAttribute xmi:type="uml:Property" name="joined" xmi:id="m3" type="t_date"/>
+     <ownedOperation xmi:type="uml:Operation" name="borrow" xmi:id="m_op"/>
+   </packagedElement>
+
+   <packagedElement xmi:type="uml:Class" name="Loan" xmi:id="c_loan">
+     <ownedAttribute xmi:type="uml:Property" name="loanDate" xmi:id="ln1" type="t_date"/>
+     <ownedAttribute xmi:type="uml:Property" name="dueDate" xmi:id="ln2" type="t_date"/>
+     <ownedAttribute xmi:type="uml:Property" name="returned" xmi:id="ln3" type="t_bool"/>
+   </packagedElement>
+
+   <packagedElement xmi:type="uml:Class" name="Catalog" xmi:id="c_catalog">
+     <ownedAttribute xmi:type="uml:Property" name="name" xmi:id="ct1" type="t_string"/>
+     <ownedOperation xmi:type="uml:Operation" name="search" xmi:id="ct_op">
+       <ownedParameter name="query" type="t_string" direction="in"/>
+     </ownedOperation>
+   </packagedElement>
+
+   <packagedElement xmi:type="uml:Class" name="Library" xmi:id="c_library">
+     <ownedAttribute xmi:type="uml:Property" name="name" xmi:id="lb1" type="t_string"/>
+     <ownedAttribute xmi:type="uml:Property" name="address" xmi:id="lb2" type="t_string"/>
+   </packagedElement>
+
+   <!-- composition: Library *owns* Catalog -->
+   <packagedElement xmi:type="uml:Association" xmi:id="as_lib_cat">
+     <ownedEnd xmi:type="uml:Property" name="library" xmi:id="ae1" type="c_library" association="as_lib_cat">
+       <lowerValue xmi:type="uml:LiteralInteger" value="1"/>
+       <upperValue xmi:type="uml:LiteralUnlimitedNatural" value="1"/>
+     </ownedEnd>
+     <ownedEnd xmi:type="uml:Property" name="catalog" xmi:id="ae2" type="c_catalog" association="as_lib_cat" aggregation="composite">
+       <lowerValue xmi:type="uml:LiteralInteger" value="1"/>
+       <upperValue xmi:type="uml:LiteralUnlimitedNatural" value="1"/>
+     </ownedEnd>
+   </packagedElement>
+
+   <!-- aggregation: Catalog groups LibraryItems -->
+   <packagedElement xmi:type="uml:Association" xmi:id="as_cat_item">
+     <ownedEnd xmi:type="uml:Property" name="catalog" xmi:id="ae3" type="c_catalog" association="as_cat_item"/>
+     <ownedEnd xmi:type="uml:Property" name="items" xmi:id="ae4" type="c_item" association="as_cat_item" aggregation="shared">
+       <lowerValue xmi:type="uml:LiteralInteger" value="0"/>
+       <upperValue xmi:type="uml:LiteralUnlimitedNatural" value="*"/>
+     </ownedEnd>
+   </packagedElement>
+
+   <!-- association: Member has Loans -->
+   <packagedElement xmi:type="uml:Association" xmi:id="as_mem_loan">
+     <ownedEnd xmi:type="uml:Property" name="member" xmi:id="ae5" type="c_member" association="as_mem_loan">
+       <lowerValue xmi:type="uml:LiteralInteger" value="1"/>
+       <upperValue xmi:type="uml:LiteralUnlimitedNatural" value="1"/>
+     </ownedEnd>
+     <ownedEnd xmi:type="uml:Property" name="loans" xmi:id="ae6" type="c_loan" association="as_mem_loan">
+       <lowerValue xmi:type="uml:LiteralInteger" value="0"/>
+       <upperValue xmi:type="uml:LiteralUnlimitedNatural" value="*"/>
+     </ownedEnd>
+   </packagedElement>
+
+   <!-- association: Loan references a LibraryItem -->
+   <packagedElement xmi:type="uml:Association" xmi:id="as_loan_item">
+     <ownedEnd xmi:type="uml:Property" name="loan" xmi:id="ae7" type="c_loan" association="as_loan_item"/>
+     <ownedEnd xmi:type="uml:Property" name="item" xmi:id="ae8" type="c_item" association="as_loan_item">
+       <lowerValue xmi:type="uml:LiteralInteger" value="1"/>
+       <upperValue xmi:type="uml:LiteralUnlimitedNatural" value="1"/>
+     </ownedEnd>
+   </packagedElement>
+
+  </packagedElement>
+ </uml:Model>
+</xmi:XMI>

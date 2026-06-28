@@ -1,0 +1,15 @@
+# dependencies (installed inside Docker, not committed)
+node_modules/
+server/node_modules/
+
+# runtime project library / data volume contents
+data/
+
+# logs & OS cruft
+*.log
+.DS_Store
+Thumbs.db
+
+# editor / tooling
+.claude/
+.vscode/

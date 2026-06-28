@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Orrery Systems Modeler</title>
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">◈</span>
+      <div>
+        <h1>Orrery Systems Modeler</h1>
+        <span class="subtitle">SysML &amp; UML model server</span>
+      </div>
+    </div>
+
+    <div class="project-bar">
+      <span class="proj-name" id="projName">No project</span>
+      <span class="dirty" id="dirtyDot" title="Unsaved changes" hidden>●</span>
+      <span class="rev" id="revLabel"></span>
+    </div>
+
+    <div class="actions">
+      <button class="btn" id="openBtn">Open…</button>
+      <button class="btn" id="newBtn">New</button>
+      <label class="btn">
+        <input type="file" id="importInput" accept=".xmi,.xml,.uml" hidden />
+        Import XMI
+      </label>
+      <div class="menu">
+        <button class="btn" id="exportBtn">Export ▾</button>
+        <div class="menu-pop" id="exportMenu" hidden>
+          <button data-act="xmi">XMI (.xmi)</button>
+          <button data-act="svg">SVG (current diagram)</button>
+          <button data-act="json">Model JSON</button>
+        </div>
+      </div>
+      <button class="btn primary" id="saveBtn">Save</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="panel">
+        <div class="panel-head">Diagrams <button class="mini" id="addDiagramBtn" title="New diagram">＋</button></div>
+        <div id="diagramList" class="diagram-list"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">Tables &amp; Matrices <button class="mini" id="addTableBtn" title="New table">＋</button></div>
+        <div id="tableList" class="diagram-list"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">Palette</div>
+        <div id="palette" class="palette"></div>
+      </div>
+      <div class="panel grow">
+        <div class="panel-head">Model Explorer</div>
+        <div id="modelTree" class="tree"></div>
+      </div>
+    </aside>
+
+    <main class="canvas-wrap">
+      <div id="canvasHint" class="canvas-hint">
+        <div class="hint-card">
+          <div class="hint-icon">◈</div>
+          <h2>Model server ready</h2>
+          <p><b>Open</b> a shared project, create a <b>New</b> one, or <b>Import</b> an XMI file.
+             Everything you save is stored on the server and visible to your whole team.</p>
+          <div class="hint-actions">
+            <button class="btn primary" id="openBtn2">Open project</button>
+            <button class="btn" id="newBtn2">New project</button>
+            <button class="btn" id="sampleBtn">Try a sample</button>
+          </div>
+        </div>
+      </div>
+      <svg id="diagram" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div id="tableView" class="table-view" hidden></div>
+      <div class="zoom-controls">
+        <button id="zoomIn" class="zbtn">+</button>
+        <button id="zoomOut" class="zbtn">−</button>
+        <button id="fitBtn" class="zbtn" title="Fit">⤢</button>
+        <span id="zoomLabel" class="zoom-label">100%</span>
+      </div>
+      <div class="tool-hint" id="toolHint"></div>
+    </main>
+
+    <aside class="properties">
+      <div class="panel-head">Properties</div>
+      <div id="propPanel" class="prop-body">
+        <p class="muted">Select an element or relationship to edit it.</p>
+      </div>
+    </aside>
+  </div>
+
+  <div id="status" class="statusbar">Connecting…</div>
+
+  <!-- modal host -->
+  <div id="modalRoot" class="modal-root" hidden></div>
+
+  <script src="js/model.js"></script>
+  <script src="js/xmi-parser.js"></script>
+  <script src="js/xmi-import.js"></script>
+  <script src="js/xmi-export.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/renderer.js"></script>
+  <script src="js/seq-renderer.js"></script>
+  <script src="js/editor.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/samples.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

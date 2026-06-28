@@ -1,0 +1,15 @@
+services:
+  modeler:
+    build: .
+    image: orrery-systems-modeler:latest
+    container_name: orrery-systems-modeler
+    ports:
+      # host:container — change the host side (left) if 8080 is taken on your machine
+      - "8080:8137"
+    volumes:
+      # named volume keeps the shared project library across restarts/upgrades
+      - modeler-data:/data
+    restart: unless-stopped
+
+volumes:
+  modeler-data:

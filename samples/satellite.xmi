@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xmi:XMI xmi:version="2.1"
+  xmlns:xmi="http://schema.omg.org/spec/XMI/2.1"
+  xmlns:uml="http://schema.omg.org/spec/UML/2.1"
+  xmlns:sysml="http://www.omg.org/spec/SysML/20120322/SysML">
+ <uml:Model xmi:type="uml:Model" name="SatelliteSystem">
+  <packagedElement xmi:type="uml:Package" name="structure" xmi:id="pkg_struct">
+
+   <packagedElement xmi:type="uml:PrimitiveType" name="Real" xmi:id="t_real"/>
+   <packagedElement xmi:type="uml:PrimitiveType" name="Integer" xmi:id="t_int"/>
+   <packagedElement xmi:type="uml:PrimitiveType" name="String" xmi:id="t_str"/>
+
+   <packagedElement xmi:type="uml:Class" name="Subsystem" xmi:id="b_sub" isAbstract="true">
+     <ownedAttribute xmi:type="uml:Property" name="mass" xmi:id="sa1" type="t_real"/>
+     <ownedAttribute xmi:type="uml:Property" name="powerDraw" xmi:id="sa2" type="t_real"/>
+     <ownedOperation xmi:type="uml:Operation" name="selfTest" xmi:id="so1"/>
+   </packagedElement>
+
+   <packagedElement xmi:type="uml:Class" name="Satellite" xmi:id="b_sat">
+     <ownedAttribute xmi:type="uml:Property" name="totalMass" xmi:id="va1" type="t_real"/>
+     <ownedAttribute xmi:type="uml:Property" name="orbitAltitudeKm" xmi:id="va2" type="t_real"/>
+     <ownedOperation xmi:type="uml:Operation" name="deploy" xmi:id="sat_op"/>
+   </packagedElement>
+
+   <packagedElement xmi:type="uml:Class" name="PowerSubsystem" xmi:id="b_power">
+     <generalization xmi:type="uml:Generalization" xmi:id="pg1" general="b_sub"/>
+     <ownedAttribute xmi:type="uml:Property" name="batteryWh" xmi:id="pa1" type="t_real"/>
+     <ownedAttribute xmi:type="uml:Property" name="solarAreaM2" xmi:id="pa2" type="t_real"/>
+   </packagedElement>
+
+   <packagedElement xmi:type="uml:Class" name="CommSubsystem" xmi:id="b_comm">
+     <generalization xmi:type="uml:Generalization" xmi:id="cg1" general="b_sub"/>
+     <ownedAttribute xmi:type="uml:Property" name="bandGHz" xmi:id="ca1" type="t_real"/>
+     <ownedAttribute xmi:type="uml:Property" name="dataRateMbps" xmi:id="ca2" type="t_real"/>
+   </packagedElement>
+
+   <packagedElement xmi:type="uml:Class" name="AttitudeControl" xmi:id="b_adcs">
+     <generalization xmi:type="uml:Generalization" xmi:id="ag1" general="b_sub"/>
+     <ownedAttribute xmi:type="uml:Property" name="reactionWheels" xmi:id="aa1" type="t_int"/>
+   </packagedElement>
+
+   <packagedElement xmi:type="uml:Class" name="Payload" xmi:id="b_payload">
+     <generalization xmi:type="uml:Generalization" xmi:id="plg1" general="b_sub"/>
+     <ownedAttribute xmi:type="uml:Property" name="instrument" xmi:id="pla1" type="t_str"/>
+     <ownedAttribute xmi:type="uml:Property" name="resolutionM" xmi:id="pla2" type="t_real"/>
+   </packagedElement>
+
+   <packagedElement xmi:type="uml:Association" xmi:id="as_sat_power">
+     <ownedEnd xmi:type="uml:Property" name="satellite" xmi:id="se1" type="b_sat" association="as_sat_power"/>
+     <ownedEnd xmi:type="uml:Property" name="power" xmi:id="se2" type="b_power" association="as_sat_power" aggregation="composite">
+       <lowerValue xmi:type="uml:LiteralInteger" value="1"/><upperValue xmi:type="uml:LiteralUnlimitedNatural" value="1"/>
+     </ownedEnd>
+   </packagedElement>
+   <packagedElement xmi:type="uml:Association" xmi:id="as_sat_comm">
+     <ownedEnd xmi:type="uml:Property" name="satellite" xmi:id="se3" type="b_sat" association="as_sat_comm"/>
+     <ownedEnd xmi:type="uml:Property" name="comm" xmi:id="se4" type="b_comm" association="as_sat_comm" aggregation="composite">
+       <lowerValue xmi:type="uml:LiteralInteger" value="1"/><upperValue xmi:type="uml:LiteralUnlimitedNatural" value="1"/>
+     </ownedEnd>
+   </packagedElement>
+   <packagedElement xmi:type="uml:Association" xmi:id="as_sat_adcs">
+     <ownedEnd xmi:type="uml:Property" name="satellite" xmi:id="se5" type="b_sat" association="as_sat_adcs"/>
+     <ownedEnd xmi:type="uml:Property" name="adcs" xmi:id="se6" type="b_adcs" association="as_sat_adcs" aggregation="composite">
+       <lowerValue xmi:type="uml:LiteralInteger" value="1"/><upperValue xmi:type="uml:LiteralUnlimitedNatural" value="1"/>
+     </ownedEnd>
+   </packagedElement>
+   <packagedElement xmi:type="uml:Association" xmi:id="as_sat_payload">
+     <ownedEnd xmi:type="uml:Property" name="satellite" xmi:id="se7" type="b_sat" association="as_sat_payload"/>
+     <ownedEnd xmi:type="uml:Property" name="payload" xmi:id="se8" type="b_payload" association="as_sat_payload" aggregation="composite">
+       <lowerValue xmi:type="uml:LiteralInteger" value="1"/><upperValue xmi:type="uml:LiteralUnlimitedNatural" value="2"/>
+     </ownedEnd>
+   </packagedElement>
+  </packagedElement>
+
+  <packagedElement xmi:type="uml:Package" name="requirements" xmi:id="pkg_req">
+   <packagedElement xmi:type="uml:Class" name="MassBudget" xmi:id="rq_mass"/>
+   <packagedElement xmi:type="uml:Class" name="PowerBudget" xmi:id="rq_power"/>
+   <packagedElement xmi:type="uml:Class" name="LinkBudget"  xmi:id="rq_link"/>
+  </packagedElement>
+
+  <sysml:Block base_Class="b_sat"/>
+  <sysml:Block base_Class="b_sub"/>
+  <sysml:Block base_Class="b_power"/>
+  <sysml:Block base_Class="b_comm"/>
+  <sysml:Block base_Class="b_adcs"/>
+  <sysml:Block base_Class="b_payload"/>
+  <sysml:Requirement base_Class="rq_mass" id="R-1" text="Total dry mass shall not exceed 500 kg."/>
+  <sysml:Requirement base_Class="rq_power" id="R-2" text="Bus shall supply &gt;= 1200 W at end of life."/>
+  <sysml:Requirement base_Class="rq_link" id="R-3" text="Downlink shall achieve &gt;= 150 Mbps."/>
+ </uml:Model>
+</xmi:XMI>

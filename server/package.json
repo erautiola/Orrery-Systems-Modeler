@@ -1,0 +1,17 @@
+{
+  "name": "orrery-systems-modeler-server",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Orrery Systems Modeler — server-based multi-user UML/SysML modeling tool",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
