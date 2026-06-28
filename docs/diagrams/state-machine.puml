@@ -1,0 +1,19 @@
+@startuml state-machine
+title Editor Tool — State Machine
+skinparam shadowing false
+
+[*] --> Select
+Select --> PlacingElement : pick element tool
+Select --> Linking : pick relationship tool
+PlacingElement --> Select : click canvas [element created]
+Linking --> Select : release on target [relationship created]
+Linking --> Select : release on empty [cancelled]
+
+state Select {
+  [*] --> Idle
+  Idle --> Dragging : mousedown on node
+  Dragging --> Idle : mouseup [position saved]
+  Idle --> Resizing : mousedown on handle
+  Resizing --> Idle : mouseup [size saved]
+}
+@enduml

@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-audit:
+    name: Lint & dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - name: Install server dependencies
+        working-directory: server
+        run: npm ci
+      - name: Syntax-check all JavaScript
+        run: |
+          for f in server/*.js public/js/*.js; do
+            echo "checking $f"
+            node --check "$f"
+          done
+      - name: npm audit (production deps)
+        working-directory: server
+        run: npm audit --omit=dev --audit-level=high
+
+  docker-build:
+    name: Docker image builds
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t orrery-systems-modeler:ci .
+      - name: Smoke test (container responds on /api/health)
+        run: |
+          docker run -d --name osm -p 8137:8137 orrery-systems-modeler:ci
+          for i in $(seq 1 20); do
+            if curl -fs http://localhost:8137/api/health; then echo "OK"; exit 0; fi
+            sleep 1
+          done
+          echo "health check failed"; docker logs osm; exit 1

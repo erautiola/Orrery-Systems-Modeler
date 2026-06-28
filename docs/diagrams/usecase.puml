@@ -1,0 +1,28 @@
+@startuml usecase
+title Orrery Systems Modeler — Use Cases
+left to right direction
+skinparam shadowing false
+
+actor "Systems Engineer" as SE
+actor "Teammate" as TM
+
+rectangle "Orrery Systems Modeler" {
+  usecase "Open / create project" as U1
+  usecase "Author diagrams" as U2
+  usecase "Edit element properties" as U3
+  usecase "Build tables & matrices" as U4
+  usecase "Import / export XMI" as U5
+  usecase "Save to shared library" as U6
+  usecase "Export SVG / CSV" as U7
+}
+
+SE --> U1
+SE --> U2
+SE --> U4
+SE --> U5
+SE --> U6
+SE --> U7
+TM --> U1
+TM --> U6
+U2 ..> U3 : <<include>>
+@enduml

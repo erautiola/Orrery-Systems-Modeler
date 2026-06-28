@@ -1,0 +1,18 @@
+@startuml deployment
+title Orrery Systems Modeler — Deployment
+skinparam shadowing false
+
+node "Client device" {
+  artifact "Web browser" as B
+}
+
+node "Docker host (any OS / cloud)" {
+  node "orrery-systems-modeler container" as C {
+    artifact "Node 20 + Express\n(listens :8137)" as N
+  }
+  database "modeler-data volume\n(/data — JSON projects)" as V
+}
+
+B --> C : HTTP\nhost :8080 -> container :8137
+N --> V : reads/writes project JSON
+@enduml

@@ -1,5 +1,9 @@
 # Orrery Systems Modeler — SysML / UML model server
 
+[![CI](https://github.com/erautiola/Orrery-Systems-Modeler/actions/workflows/ci.yml/badge.svg)](https://github.com/erautiola/Orrery-Systems-Modeler/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/erautiola/Orrery-Systems-Modeler/actions/workflows/codeql.yml/badge.svg)](https://github.com/erautiola/Orrery-Systems-Modeler/actions/workflows/codeql.yml)
+![version](https://img.shields.io/badge/version-0.1.0-blue)
+
 A server-based, multi-user UML & SysML modeling tool. Runs as a small Node.js
 web server (packaged with Docker so it runs identically on Windows, Linux, Mac,
 or any cloud). Everyone on your team points a browser at the same server and
@@ -7,6 +11,9 @@ works from one **shared project library**.
 
 You can **author** models — create diagrams, drop elements, draw relationships,
 edit properties — as well as **import** and **export** OMG XMI.
+
+📚 **[Full documentation](docs/README.md)** — architecture, data model, flows,
+requirements, and the REST API, with embedded UML & SysML (PlantUML) diagrams.
 
 ---
 
@@ -96,10 +103,10 @@ Set `PORT` and `DATA_DIR` env vars to override the port and storage location.
 
 ```
 server/
-  server.js        Express: serves the SPA + REST API
-  store.js         file-based shared project library (optimistic-concurrency saves)
-  package.json
-public/            the browser app (no build step, framework-free)
+  server.js          Express: serves the SPA + REST API
+  store.js           file-based shared project library (optimistic-concurrency saves)
+  package.json / package-lock.json
+public/              the browser app (no build step, framework-free)
   index.html
   css/styles.css
   js/model.js        internal model + UML/SysML type catalog (palettes, notation)
@@ -107,17 +114,34 @@ public/            the browser app (no build step, framework-free)
   js/xmi-import.js   parser model → internal model (+ auto-layout)
   js/xmi-export.js   internal model → XMI 2.1
   js/layout.js       force-directed auto-layout (for imports)
-  js/renderer.js     SVG rendering of all shapes + edges + handles
+  js/renderer.js     SVG rendering of node/edge diagrams + handles
+  js/seq-renderer.js bespoke renderer for sequence diagrams
   js/editor.js       canvas interaction: create/select/move/resize/connect
   js/api.js          REST client
-  js/app.js          controller: projects, diagrams, palette, property editor
-samples/*.xmi      example models you can Import
+  js/app.js          controller: projects, diagrams, tables, palette, properties
+docs/                full docs + PlantUML UML/SysML diagrams (docs/diagrams/*.puml)
+exports/             orrery-systems-modeler.xmi — the app's own model, importable
+samples/*.xmi        example models you can Import
+.github/             CI, CodeQL, dependency-review workflows + Dependabot
 Dockerfile, docker-compose.yml
 ```
 
 The browser holds the model and does XMI parsing/serialization; the server
 stores the JSON model and serves the library. Storage is plain JSON files — easy
 to back up (copy the volume) or inspect.
+
+See **[docs/](docs/README.md)** for the architecture, data-model, behavior, and
+API documentation (with rendered diagrams).
+
+## Continuous integration & scanning
+
+Every push / PR to `main` runs (see [`.github/workflows`](.github/workflows)):
+
+- **CI** — installs deps (`npm ci`), syntax-checks all JS, runs `npm audit`, and
+  builds the Docker image + a `/api/health` smoke test.
+- **CodeQL** — static security/quality analysis for JavaScript (also weekly).
+- **Dependency Review** — flags vulnerable dependency changes on PRs.
+- **Dependabot** — weekly update PRs for npm, GitHub Actions, and Docker.
 
 ---
 

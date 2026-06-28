@@ -1,0 +1,31 @@
+@startuml import-sequence
+title Import XMI -> new shared project (UML Sequence)
+skinparam shadowing false
+actor User
+participant "app.js" as App
+participant "xmi-parser.js" as P
+participant "xmi-import.js" as I
+participant "layout.js" as L
+participant "api.js" as Api
+participant "server.js" as Srv
+
+User -> App : Import XMI (button / drag-drop)
+activate App
+App -> P : parse(xmlText)
+activate P
+P --> App : parser model (id -> element map)
+deactivate P
+App -> I : fromXmi(text)
+activate I
+I -> L : layout(nodes, edges) per package
+L --> I : node positions
+I --> App : internal model + diagrams
+deactivate I
+App -> Api : create(name, model)
+Api -> Srv : POST /api/projects
+Srv --> Api : project
+Api --> App : project
+App -> App : open & render first diagram
+App -> User : diagram shown, editable
+deactivate App
+@enduml

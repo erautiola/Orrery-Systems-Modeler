@@ -1,0 +1,41 @@
+@startuml architecture
+title Orrery Systems Modeler — Component Architecture
+skinparam componentStyle rectangle
+skinparam shadowing false
+left to right direction
+
+actor "Modeler\n(browser)" as User
+
+node "Browser SPA (public/)" as SPA {
+  [index.html + styles] as UI
+  [app.js — controller] as App
+  [editor.js — interaction] as Editor
+  [renderer.js / seq-renderer.js] as Renderers
+  [model.js — type catalog] as Catalog
+  [xmi-import.js / xmi-export.js] as Xmi
+  [layout.js — auto-layout] as Layout
+  [api.js — REST client] as ApiClient
+}
+
+node "Node.js Server (server/)" as Server {
+  [server.js — Express REST API] as REST
+  [store.js — file store] as Store
+  [static file serving] as Static
+}
+
+database "Project library\n(JSON files in Docker volume)" as Lib
+
+User --> UI
+UI --> App
+App --> Editor
+App --> Renderers
+App --> Catalog
+App --> Xmi
+App --> Layout
+App --> ApiClient
+ApiClient ..> REST : HTTP / JSON
+REST --> Store
+Store --> Lib
+REST --> Static
+Static ..> SPA : serves
+@enduml

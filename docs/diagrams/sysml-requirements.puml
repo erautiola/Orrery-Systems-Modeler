@@ -1,0 +1,41 @@
+@startuml sysml-requirements
+title SysML Requirements Diagram (excerpt) with «satisfy»
+skinparam shadowing false
+hide circle
+
+skinparam class<<requirement>> {
+  BackgroundColor #FDECEC
+  BorderColor #C0392B
+}
+skinparam class<<block>> {
+  BackgroundColor #FFF4E8
+  BorderColor #C8772E
+}
+
+class "Multi-user library" as R1 <<requirement>> {
+  id = "R-1"
+  text = "Projects are stored on a server and shared by the team"
+}
+class "Authoring" as R2 <<requirement>> {
+  id = "R-2"
+  text = "Create and edit UML and SysML diagrams"
+}
+class "Interoperability" as R3 <<requirement>> {
+  id = "R-3"
+  text = "Import and export OMG XMI"
+}
+class "Tabular views" as R4 <<requirement>> {
+  id = "R-4"
+  text = "Element/requirement tables and dependency matrices"
+}
+
+class Backend <<block>>
+class Frontend <<block>>
+class XmiIO <<block>>
+class Tables <<block>>
+
+Backend ..> R1 : <<satisfy>>
+Frontend ..> R2 : <<satisfy>>
+XmiIO ..> R3 : <<satisfy>>
+Tables ..> R4 : <<satisfy>>
+@enduml

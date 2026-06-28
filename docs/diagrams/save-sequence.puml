@@ -1,0 +1,36 @@
+@startuml save-sequence
+title Save Project — optimistic concurrency (UML Sequence)
+skinparam shadowing false
+actor User
+participant "app.js" as App
+participant "api.js" as Api
+participant "server.js\n(Express)" as Srv
+participant "store.js" as Store
+database "project JSON" as Lib
+
+User -> App : Ctrl+S / Save
+activate App
+App -> Api : save(id, {name, model, rev})
+activate Api
+Api -> Srv : PUT /api/projects/:id
+activate Srv
+Srv -> Store : save(id, {rev})
+activate Store
+Store -> Lib : read current
+alt client rev == server rev
+  Store -> Lib : rev++ ; write (temp + rename)
+  Store --> Srv : project (rev+1)
+  Srv --> Api : 200 OK
+  Api --> App : project
+  App -> User : "Saved (rev N)"
+else stale rev
+  Store --> Srv : Conflict
+  Srv --> Api : 409 Conflict
+  Api --> App : error(409)
+  App -> User : offer reload
+end
+deactivate Store
+deactivate Srv
+deactivate Api
+deactivate App
+@enduml

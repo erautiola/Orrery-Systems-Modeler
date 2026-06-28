@@ -1,0 +1,36 @@
+@startuml sysml-bdd
+title SysML Block Definition Diagram (BDD) — System Blocks
+skinparam shadowing false
+skinparam class {
+  BackgroundColor #FFF4E8
+  BorderColor #C8772E
+}
+hide circle
+
+class Application <<block>>
+class Frontend <<block>> {
+  values
+  diagramTypes : int = 9
+}
+class Backend <<block>> {
+  values
+  port : int = 8137
+}
+class ProjectStore <<block>> {
+  values
+  format : String = "JSON"
+  concurrency : String = "rev-checked"
+}
+class Renderer <<block>>
+class SequenceRenderer <<block>>
+class Editor <<block>>
+class XmiIO <<block>>
+
+Application *-- "1" Frontend
+Application *-- "1" Backend
+Backend *-- "1" ProjectStore
+Frontend *-- "1" Renderer
+Frontend *-- "1" SequenceRenderer
+Frontend *-- "1" Editor
+Frontend *-- "1" XmiIO
+@enduml

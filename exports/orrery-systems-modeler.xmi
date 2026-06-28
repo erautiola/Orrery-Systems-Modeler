@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Orrery Systems Modeler — self model (SysML). Import via the app's "Import XMI". -->
+<xmi:XMI xmi:version="2.1"
+  xmlns:xmi="http://schema.omg.org/spec/XMI/2.1"
+  xmlns:uml="http://schema.omg.org/spec/UML/2.1"
+  xmlns:sysml="http://www.omg.org/spec/SysML/20120322/SysML">
+ <uml:Model xmi:type="uml:Model" name="OrrerySystemsModeler">
+  <packagedElement xmi:type="uml:Package" name="structure" xmi:id="pkg_struct">
+
+   <packagedElement xmi:type="uml:PrimitiveType" name="String" xmi:id="t_str"/>
+   <packagedElement xmi:type="uml:PrimitiveType" name="Integer" xmi:id="t_int"/>
+
+   <packagedElement xmi:type="uml:Class" name="Application" xmi:id="b_app"/>
+
+   <packagedElement xmi:type="uml:Class" name="Frontend" xmi:id="b_front">
+     <ownedAttribute xmi:type="uml:Property" name="diagramTypes" xmi:id="fa1" type="t_int"/>
+     <ownedAttribute xmi:type="uml:Property" name="framework" xmi:id="fa2" type="t_str"/>
+     <ownedOperation xmi:type="uml:Operation" name="render" xmi:id="fo1"/>
+   </packagedElement>
+
+   <packagedElement xmi:type="uml:Class" name="Backend" xmi:id="b_back">
+     <ownedAttribute xmi:type="uml:Property" name="port" xmi:id="ba1" type="t_int"/>
+     <ownedOperation xmi:type="uml:Operation" name="serveStatic" xmi:id="bo1"/>
+     <ownedOperation xmi:type="uml:Operation" name="restApi" xmi:id="bo2"/>
+   </packagedElement>
+
+   <packagedElement xmi:type="uml:Class" name="ProjectStore" xmi:id="b_store">
+     <ownedAttribute xmi:type="uml:Property" name="format" xmi:id="sa1" type="t_str"/>
+     <ownedOperation xmi:type="uml:Operation" name="save" xmi:id="so1"/>
+     <ownedOperation xmi:type="uml:Operation" name="list" xmi:id="so2"/>
+   </packagedElement>
+
+   <packagedElement xmi:type="uml:Class" name="Renderer" xmi:id="b_rend"/>
+   <packagedElement xmi:type="uml:Class" name="SequenceRenderer" xmi:id="b_seq"/>
+   <packagedElement xmi:type="uml:Class" name="Editor" xmi:id="b_edit"/>
+   <packagedElement xmi:type="uml:Class" name="XmiIO" xmi:id="b_xmi"/>
+   <packagedElement xmi:type="uml:Class" name="Tables" xmi:id="b_tbl"/>
+
+   <!-- Application composed of Frontend + Backend -->
+   <packagedElement xmi:type="uml:Association" xmi:id="as_app_front">
+     <ownedEnd xmi:type="uml:Property" name="application" xmi:id="ae1" type="b_app" association="as_app_front"/>
+     <ownedEnd xmi:type="uml:Property" name="frontend" xmi:id="ae2" type="b_front" association="as_app_front" aggregation="composite">
+       <lowerValue xmi:type="uml:LiteralInteger" value="1"/><upperValue xmi:type="uml:LiteralUnlimitedNatural" value="1"/>
+     </ownedEnd>
+   </packagedElement>
+   <packagedElement xmi:type="uml:Association" xmi:id="as_app_back">
+     <ownedEnd xmi:type="uml:Property" name="application" xmi:id="ae3" type="b_app" association="as_app_back"/>
+     <ownedEnd xmi:type="uml:Property" name="backend" xmi:id="ae4" type="b_back" association="as_app_back" aggregation="composite">
+       <lowerValue xmi:type="uml:LiteralInteger" value="1"/><upperValue xmi:type="uml:LiteralUnlimitedNatural" value="1"/>
+     </ownedEnd>
+   </packagedElement>
+   <packagedElement xmi:type="uml:Association" xmi:id="as_back_store">
+     <ownedEnd xmi:type="uml:Property" name="backend" xmi:id="ae5" type="b_back" association="as_back_store"/>
+     <ownedEnd xmi:type="uml:Property" name="store" xmi:id="ae6" type="b_store" association="as_back_store" aggregation="composite">
+       <lowerValue xmi:type="uml:LiteralInteger" value="1"/><upperValue xmi:type="uml:LiteralUnlimitedNatural" value="1"/>
+     </ownedEnd>
+   </packagedElement>
+   <packagedElement xmi:type="uml:Association" xmi:id="as_front_rend">
+     <ownedEnd xmi:type="uml:Property" name="frontend" xmi:id="ae7" type="b_front" association="as_front_rend"/>
+     <ownedEnd xmi:type="uml:Property" name="renderer" xmi:id="ae8" type="b_rend" association="as_front_rend" aggregation="composite"/>
+   </packagedElement>
+   <packagedElement xmi:type="uml:Association" xmi:id="as_front_seq">
+     <ownedEnd xmi:type="uml:Property" name="frontend" xmi:id="ae9" type="b_front" association="as_front_seq"/>
+     <ownedEnd xmi:type="uml:Property" name="sequenceRenderer" xmi:id="ae10" type="b_seq" association="as_front_seq" aggregation="composite"/>
+   </packagedElement>
+   <packagedElement xmi:type="uml:Association" xmi:id="as_front_edit">
+     <ownedEnd xmi:type="uml:Property" name="frontend" xmi:id="ae11" type="b_front" association="as_front_edit"/>
+     <ownedEnd xmi:type="uml:Property" name="editor" xmi:id="ae12" type="b_edit" association="as_front_edit" aggregation="composite"/>
+   </packagedElement>
+   <packagedElement xmi:type="uml:Association" xmi:id="as_front_xmi">
+     <ownedEnd xmi:type="uml:Property" name="frontend" xmi:id="ae13" type="b_front" association="as_front_xmi"/>
+     <ownedEnd xmi:type="uml:Property" name="xmiIO" xmi:id="ae14" type="b_xmi" association="as_front_xmi" aggregation="composite"/>
+   </packagedElement>
+   <packagedElement xmi:type="uml:Association" xmi:id="as_front_tbl">
+     <ownedEnd xmi:type="uml:Property" name="frontend" xmi:id="ae15" type="b_front" association="as_front_tbl"/>
+     <ownedEnd xmi:type="uml:Property" name="tables" xmi:id="ae16" type="b_tbl" association="as_front_tbl" aggregation="composite"/>
+   </packagedElement>
+  </packagedElement>
+
+  <packagedElement xmi:type="uml:Package" name="requirements" xmi:id="pkg_req">
+   <packagedElement xmi:type="uml:Class" name="MultiUserLibrary" xmi:id="rq_lib"/>
+   <packagedElement xmi:type="uml:Class" name="Authoring" xmi:id="rq_auth"/>
+   <packagedElement xmi:type="uml:Class" name="Interoperability" xmi:id="rq_xmi"/>
+   <packagedElement xmi:type="uml:Class" name="TabularViews" xmi:id="rq_tbl"/>
+
+   <!-- satisfy links (imported as dependencies) -->
+   <packagedElement xmi:type="uml:Dependency" xmi:id="dep1" name="satisfy" client="b_back" supplier="rq_lib"/>
+   <packagedElement xmi:type="uml:Dependency" xmi:id="dep2" name="satisfy" client="b_front" supplier="rq_auth"/>
+   <packagedElement xmi:type="uml:Dependency" xmi:id="dep3" name="satisfy" client="b_xmi" supplier="rq_xmi"/>
+   <packagedElement xmi:type="uml:Dependency" xmi:id="dep4" name="satisfy" client="b_tbl" supplier="rq_tbl"/>
+  </packagedElement>
+
+  <!-- SysML profile applications -->
+  <sysml:Block base_Class="b_app"/>
+  <sysml:Block base_Class="b_front"/>
+  <sysml:Block base_Class="b_back"/>
+  <sysml:Block base_Class="b_store"/>
+  <sysml:Block base_Class="b_rend"/>
+  <sysml:Block base_Class="b_seq"/>
+  <sysml:Block base_Class="b_edit"/>
+  <sysml:Block base_Class="b_xmi"/>
+  <sysml:Block base_Class="b_tbl"/>
+  <sysml:Requirement base_Class="rq_lib" id="R-1" text="Projects are stored on a server and shared by the team."/>
+  <sysml:Requirement base_Class="rq_auth" id="R-2" text="Create and edit UML and SysML diagrams."/>
+  <sysml:Requirement base_Class="rq_xmi" id="R-3" text="Import and export OMG XMI."/>
+  <sysml:Requirement base_Class="rq_tbl" id="R-4" text="Element/requirement tables and dependency matrices."/>
+ </uml:Model>
+</xmi:XMI>

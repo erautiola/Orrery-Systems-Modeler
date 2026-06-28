@@ -5,7 +5,7 @@ WORKDIR /app
 
 # install server deps first for better layer caching
 COPY server/package.json server/package-lock.json* ./server/
-RUN cd server && npm install --omit=dev
+RUN cd server && npm ci --omit=dev
 
 # app source
 COPY server ./server
