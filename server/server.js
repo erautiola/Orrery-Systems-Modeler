@@ -79,12 +79,26 @@ function wrap(fn) {
   return (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 }
 
-store.init().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Orrery Systems Modeler running on http://localhost:${PORT}`);
-    console.log(`Project library: ${DATA_DIR}`);
+// Initialize the store and start listening. Returns a Promise<http.Server>
+// that resolves once the server is accepting connections (handy for tests).
+async function start(port = PORT) {
+  await store.init();
+  return new Promise((resolve) => {
+    const server = app.listen(port, () => {
+      const addr = server.address();
+      console.log(`Orrery Systems Modeler running on http://localhost:${addr.port}`);
+      console.log(`Project library: ${DATA_DIR}`);
+      resolve(server);
+    });
   });
-}).catch((e) => {
-  console.error("Failed to start:", e);
-  process.exit(1);
-});
+}
+
+// only auto-start when run directly (`node server.js`), not when imported by tests
+if (require.main === module) {
+  start().catch((e) => {
+    console.error("Failed to start:", e);
+    process.exit(1);
+  });
+}
+
+module.exports = { app, store, start };

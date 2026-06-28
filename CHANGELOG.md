@@ -3,6 +3,16 @@
 All notable changes to Orrery Systems Modeler are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- **Test suite** — unit tests for the project store and integration tests that
+  drive the REST API over HTTP (Node's built-in `node --test`; no new deps).
+- CI now **runs unit + integration tests** (dedicated job) and **re-runs the
+  suite inside the freshly built Docker image** before a build is considered green.
+- **Dependabot auto-merge** workflow — patch/minor and GitHub-Actions updates
+  merge automatically once required checks pass; major bumps are held for review.
+
 ## [0.1.1] - 2026-06-28
 
 ### Changed

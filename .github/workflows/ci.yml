@@ -30,13 +30,32 @@ jobs:
         working-directory: server
         run: npm audit --omit=dev --audit-level=high
 
+  test:
+    name: Unit & integration tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - name: Install server dependencies
+        working-directory: server
+        run: npm ci
+      - name: Run unit + integration tests
+        working-directory: server
+        run: npm test
+
   docker-build:
-    name: Docker image builds
+    name: Docker image builds & tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - name: Build image
         run: docker build -t orrery-systems-modeler:ci .
+      - name: Run tests inside the built image
+        run: docker run --rm orrery-systems-modeler:ci sh -c "cd server && node --test"
       - name: Smoke test (container responds on /api/health)
         run: |
           docker run -d --name osm -p 8137:8137 orrery-systems-modeler:ci
