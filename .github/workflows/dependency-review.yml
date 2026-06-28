@@ -14,10 +14,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Dependency Review
-        # Requires GitHub's Dependency Graph to be enabled on the repo
-        # (Settings → Code security → Dependency graph). Until then this step
-        # is advisory; remove continue-on-error to make it gate PRs.
+        # Requires GitHub's Dependency Graph (enabled on this repo).
+        # Gates PRs that introduce high-severity vulnerable dependencies.
         uses: actions/dependency-review-action@v4
-        continue-on-error: true
         with:
           fail-on-severity: high

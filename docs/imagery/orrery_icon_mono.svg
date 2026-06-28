@@ -1,0 +1,10 @@
+<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Orrery favicon">
+  
+    <circle cx="60" cy="60" r="45" fill="none" stroke="#16202E" stroke-width="3.4" />
+    <circle cx="60" cy="60" r="27" fill="none" stroke="#16202E" stroke-width="3.4" />
+    <line x1="60" y1="60" x2="95.24" y2="89.58" stroke="#16202E" stroke-width="3" />
+    <line x1="60" y1="60" x2="80.5" y2="42.0" stroke="#16202E" stroke-width="3" />
+    <circle cx="95.24" cy="89.58" r="6.5" fill="#16202E" />
+    <circle cx="80.5" cy="42.0" r="5.5" fill="#16202E" />
+    <circle cx="60" cy="60" r="11.5" fill="#16202E" />
+</svg>
