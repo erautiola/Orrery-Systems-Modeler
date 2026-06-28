@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/imagery/orrery_logo_dark.svg" />
+    <img alt="Orrery Systems Modeler — An MBSE Tool by EDA4 LLC" src="docs/imagery/orrery_logo_light.svg" width="480" />
+  </picture>
+</p>
+
 # Orrery Systems Modeler — SysML / UML model server
 
 [![CI](https://github.com/erautiola/Orrery-Systems-Modeler/actions/workflows/ci.yml/badge.svg)](https://github.com/erautiola/Orrery-Systems-Modeler/actions/workflows/ci.yml)
@@ -157,3 +164,8 @@ conflict-checked):
   Communication.
 - Accounts / permissions, model validation rules, undo-redo history, and richer
   IBD port/flow semantics.
+
+---
+
+<sub>**Orrery Systems Modeler** — an MBSE tool by **EDA4 LLC**.</sub>
+
