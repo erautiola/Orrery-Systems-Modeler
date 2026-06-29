@@ -19,7 +19,7 @@ reach that host/port shares the same project library.
 
 Add with the **＋** beside *Diagrams*. Types: Class, Package, Component,
 SysML **BDD**, SysML **IBD**, **Requirement**, **Use Case**, **State Machine**,
-**Sequence**, **ER / Data Model**, **Activity**.
+**Sequence**, **ER / Data Model**, **Activity**, **Parametric**.
 
 - Pick an **element tool** in the palette, then click the canvas to place it.
 - Pick a **relationship tool**, then **drag from source to target**.
@@ -49,6 +49,11 @@ Place **Action**, **Decision/Merge**, **Fork/Join**, **Initial**, **Final**,
 **Flow Final**, and **Object Node** elements, and connect them with **Control
 Flow** (add a `[guard]` in Properties) or **Object Flow**. Drop a **Partition**
 (swimlane) and drag actions into it to assign them to that lane.
+
+### Parametric (SysML)
+Place a **Constraint** (set its `{expression}` and list its **parameters** in
+Properties) and **Value Property** elements (type + value). Use the **Binding
+Connector** to tie value properties to the constraint's parameters.
 
 ## Tables & matrices
 

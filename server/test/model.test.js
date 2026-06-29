@@ -60,6 +60,16 @@ test("Activity diagram type and its elements/relationships exist", () => {
   assert.ok(Model.ELEMENTS.action && Model.ELEMENTS.partition && Model.ELEMENTS.flowfinal);
 });
 
+test("Parametric diagram type + constraint/value props exist", () => {
+  assert.ok(Model.DIAGRAMS.parametric, "parametric diagram type");
+  assert.ok(Model.DIAGRAMS.parametric.relationships.includes("binding"));
+  const cp = Model.newElement("constraintProp");
+  assert.ok(Array.isArray(cp.parameters) && cp.expression === "");
+  const vp = Model.newElement("valueProp");
+  assert.equal(vp.valueType, ""); assert.equal(vp.value, "");
+  assert.ok(Model.RELATIONSHIPS.binding);
+});
+
 test("label helpers format correctly", () => {
   assert.equal(Model.transitionLabel({ trigger: "t", guard: "g", effect: "e" }), "t [g] / e");
   assert.equal(Model.messageLabel({ type: "msgSync", name: "op", args: "a", returnValue: "r" }), "r = op(a)");

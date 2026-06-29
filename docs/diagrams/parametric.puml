@@ -1,0 +1,14 @@
+@startuml parametric
+title Parametric — F = m*a (constraint bound to value properties)
+skinparam shadowing false
+skinparam rectangle { BorderColor #5b9bff }
+
+rectangle "force : N" as F
+rectangle "mass : kg" as M
+rectangle "accel : m/s^2" as A
+rectangle "«constraint»\nForceEq\n{F = m*a}" as C #F0E6FF
+
+F -- C
+M -- C
+A -- C
+@enduml

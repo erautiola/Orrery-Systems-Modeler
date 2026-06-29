@@ -455,6 +455,14 @@
       p.appendChild(textField("Represents (classifier)", el.represents || "", (v) => { el.represents = v; touch(true); }));
     }
     if (el.type === "dbtable") columnSection(p, el);
+    if (el.type === "constraintProp") {
+      p.appendChild(textField("Constraint expression { }", el.expression || "", (v) => { el.expression = v; touch(true); }));
+      featureSection(p, "Parameters", el.parameters, () => "p", paramRow, () => el.parameters.push("p"));
+    }
+    if (el.type === "valueProp") {
+      p.appendChild(textField("Type", el.valueType || "", (v) => { el.valueType = v; touch(true); }));
+      p.appendChild(textField("Value", el.value || "", (v) => { el.value = v; touch(true); }));
+    }
     if (el.type === "note") {
       p.appendChild(areaField("Text", el.name, (v) => { el.name = v; touch(true); }));
     }
@@ -552,6 +560,12 @@
   function literalRow(arr, i) {
     const row = document.createElement("div"); row.className = "feat-row";
     row.appendChild(inp("nm", arr[i], "literal", (v) => { arr[i] = v; touch(false); }));
+    row.appendChild(delBtn(() => { arr.splice(i, 1); touch(true); reselect(); }));
+    return row;
+  }
+  function paramRow(arr, i) {
+    const row = document.createElement("div"); row.className = "feat-row";
+    row.appendChild(inp("nm", arr[i], "parameter", (v) => { arr[i] = v; touch(true); }));
     row.appendChild(delBtn(() => { arr.splice(i, 1); touch(true); reselect(); }));
     return row;
   }
@@ -709,6 +723,7 @@
       initial: "●", final: "◉", choice: "◇", composite: "▣", forkjoin: "▬", junction: "•", history: "Ⓗ",
       part: "▦", port: "▪", note: "🗒", instance: "▤", lifeline: "▯", dbtable: "▤",
       action: "▭", objectNode: "▭", decision: "◇", flowfinal: "⊗", partition: "▥",
+      constraintProp: "∑", valueProp: "▭",
     })[type] || "▣";
   }
   function download(content, name, mime) {
