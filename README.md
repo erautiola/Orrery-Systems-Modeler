@@ -70,7 +70,10 @@ Set `PORT` and `DATA_DIR` env vars to override the port and storage location.
 **Authoring**
 - Multiple diagrams per project, of these types:
   Class, Package, Component, **SysML BDD**, **SysML IBD**, **Requirement**,
-  Use Case, **State Machine**, **Sequence**.
+  Use Case, **State Machine**, **Sequence**, **ER / Data Model**.
+- **ER / Data Model**: database tables with columns (type, PK, NOT NULL, UNIQUE,
+  default), foreign keys in **crow's-foot** notation, and **SQL DDL export**
+  (`CREATE TABLE` + FK constraints) via Export → SQL DDL.
 - **Sequence diagrams**: lifelines (with `represents` type), sync / async / reply
   / create / destroy messages, **self-messages**, **activation bars**, and
   `ret = op(args)` labels. Drag from one lifeline to another to add a message;
@@ -159,9 +162,8 @@ Planned next phases (real-time co-editing is intentionally **out of scope** —
 the model is *shared library, separate work*: everyone shares projects, saves are
 conflict-checked):
 
-- **Database / ER tables + SQL DDL generation** (data modeling — next up).
-- **Activity** and **Parametric** diagrams (Sequence is done) — plus Timing &
-  Communication.
+- **Activity** and **Parametric** diagrams (Sequence and ER/SQL are done) — plus
+  Timing & Communication.
 - Accounts / permissions, model validation rules, undo-redo history, and richer
   IBD port/flow semantics.
 

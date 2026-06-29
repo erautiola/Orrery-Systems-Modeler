@@ -19,7 +19,7 @@ reach that host/port shares the same project library.
 
 Add with the **＋** beside *Diagrams*. Types: Class, Package, Component,
 SysML **BDD**, SysML **IBD**, **Requirement**, **Use Case**, **State Machine**,
-**Sequence**.
+**Sequence**, **ER / Data Model**.
 
 - Pick an **element tool** in the palette, then click the canvas to place it.
 - Pick a **relationship tool**, then **drag from source to target**.
@@ -36,6 +36,13 @@ initial, final, choice, fork/join, junction, history.
 Place **Lifelines**; choose a message tool (sync/async/reply/create/destroy) and
 **drag from one lifeline to another**. Drag a message up/down to reorder.
 Self‑messages and activation bars are drawn automatically.
+
+### ER / Data Model
+Place **DB Table** elements; in Properties add **Columns** (name, type, and the
+**PK / NOT NULL / UNIQUE** checkboxes + default). Use the **Foreign Key** tool to
+drag from a child table to its parent (crow's‑foot notation); set the FK column
+and referenced column in the relationship's Properties. Then **Export → SQL DDL
+(.sql)** to generate `CREATE TABLE` + foreign‑key constraints.
 
 ## Tables & matrices
 

@@ -1,0 +1,22 @@
+@startuml er-data-model
+title Example ER schema (crow's-foot) — what an ER diagram + SQL export models
+hide circle
+skinparam linetype ortho
+
+entity customer {
+  * id : INT <<PK>>
+  --
+  * email : VARCHAR(255) <<unique>>
+  name : VARCHAR(120)
+}
+
+entity "order" as ord {
+  * id : INT <<PK>>
+  --
+  * customer_id : INT <<FK>>
+  total : DECIMAL(10,2)
+  placed_at : TIMESTAMP
+}
+
+customer ||--o{ ord : places
+@enduml

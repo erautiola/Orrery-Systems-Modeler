@@ -43,6 +43,15 @@
     if (comp === "literals") return (el.literals || []).map((l) => ({ text: l }));
     return [];
   }
+  // ER column display: "PK id : INT *"  (* = NOT NULL)
+  function colDisplay(c, isFk) {
+    let pre = c.pk ? "PK " : (isFk ? "FK " : "");
+    let s = pre + (c.name || "");
+    if (c.dataType) s += " : " + c.dataType;
+    if (c.unique && !c.pk) s += " U";
+    if (c.nullable === false) s += " *";
+    return { text: s, pk: c.pk };
+  }
   // entry/exit/do internal-activity lines for a state
   function stateActivities(el) {
     const out = [];
@@ -69,6 +78,13 @@
       for (const a of acts) w = Math.max(w, tw(a, F_FEAT) + 20);
       const h = 30 + (acts.length ? acts.length * LINE + 8 : 0);
       return { w: Math.round(w), h: Math.round(Math.max(h, 44)) };
+    }
+    if (spec.shape === "dbtable") {
+      const cols = el.columns || [];
+      let w = Math.max(150, tw(el.name, F_NAME) + 28);
+      for (const c of cols) w = Math.max(w, tw(colDisplay(c, false).text, F_FEAT) + 36);
+      const h = 28 + Math.max(cols.length ? cols.length * LINE + 8 : 14, 14);
+      return { w: Math.round(Math.min(w, 360)), h: Math.round(h) };
     }
 
     const stereo = Model.stereoText(el);
@@ -97,6 +113,7 @@
       case "component": return { head: "#fff2d9", bar: "#f6c453" };
       case "actor": case "usecase": return { head: "#dde9ff", bar: "#5b9bff" };
       case "state": return { head: "#e3ecff", bar: "#5b9bff" };
+      case "dbtable": return { head: "#dcefe9", bar: "#1E9C8C" };
       case "part": return { head: "#e8f0ff", bar: "#5b9bff" };
       default: return { head: "#e8eefb", bar: "#5b9bff" };
     }
@@ -128,6 +145,7 @@
       case "component": drawClassifier(g, el, node, true); break;
       case "requirement": drawRequirement(g, el, node); break;
       case "state": drawState(g, el, node); break;
+      case "dbtable": drawDbTable(g, el, node); break;
       case "part": drawPart(g, el, W, H); break;
       case "note": drawNote(g, el, W, H); break;
       case "forkjoin": g.appendChild(el2("rect", { width: W, height: H, rx: 2, fill: "#1a2236" })); break;
@@ -216,6 +234,25 @@
     g.appendChild(el2("ellipse", { cx: W / 2, cy: H / 2, rx: W / 2 - 2, ry: H / 2 - 2, fill: "#dde9ff", stroke: "#3a4a6b", "stroke-width": 1.3 }));
     g.appendChild(text(W / 2, H / 2 + 4, el.name, { "text-anchor": "middle", "font-weight": 600, "font-size": 13, fill: "#1a2236" }));
   }
+  function drawDbTable(g, el, node) {
+    const W = node.w, H = node.h, ac = accent(el);
+    const fk = node._fkCols || new Set();
+    g.appendChild(el2("rect", { class: "node-bg", width: W, height: H, rx: 4, fill: "#fff" }));
+    g.appendChild(el2("rect", { class: "node-head", width: W, height: 26, rx: 4, fill: ac.head }));
+    g.appendChild(el2("rect", { y: 22, width: W, height: 4, fill: ac.head }));
+    g.appendChild(el2("rect", { width: 4, height: H, fill: ac.bar, rx: 2 }));
+    g.appendChild(text(W / 2, 17, el.name, { "text-anchor": "middle", "font-weight": 700, "font-size": 13, fill: "#1a2236" }));
+    g.appendChild(el2("line", { x1: 0, y1: 26, x2: W, y2: 26, stroke: "#c2cbe0" }));
+    let y = 40;
+    for (const c of (el.columns || [])) {
+      const d = colDisplay(c, fk.has(c.name));
+      const a = { x: PADX, y, "font-size": 11, fill: "#1a2236", "font-family": "'Cascadia Code', Consolas, monospace" };
+      if (d.pk) { a["font-weight"] = "700"; a["text-decoration"] = "underline"; }
+      g.appendChild(text(PADX, y, d.text, a));
+      y += LINE;
+    }
+  }
+
   function drawPart(g, el, W, H) {
     g.appendChild(el2("rect", { class: "node-bg", width: W, height: H, rx: 4, fill: "#eef4ff", stroke: "#3a4a6b", "stroke-width": 1.3 }));
     const label = el.name + (el.attributes && el.attributes[0] && el.attributes[0].type ? " : " + el.attributes[0].type : "");
@@ -312,6 +349,17 @@
       const L = 16, W = 7, ex = p.x + c * L, ey = p.y + s * L, mx = p.x + c * (L / 2), my = p.y + s * (L / 2);
       return el2("polygon", { points: `${p.x},${p.y} ${mx + nx * W},${my + ny * W} ${ex},${ey} ${mx - nx * W},${my - ny * W}`, fill: kind === "diamondFilled" ? "#9fb0cf" : "#0c111b", stroke: "#9fb0cf", "stroke-width": 1.5 });
     }
+    if (kind === "crowsfoot") { // "many" — three prongs fanning onto the entity
+      const L = 14, W = 8, bx = p.x - c * L, by = p.y - s * L, g = el2("g", {});
+      g.appendChild(el2("line", { x1: bx, y1: by, x2: p.x, y2: p.y, stroke: "#9fb0cf", "stroke-width": 1.4 }));
+      g.appendChild(el2("line", { x1: bx, y1: by, x2: p.x + nx * W, y2: p.y + ny * W, stroke: "#9fb0cf", "stroke-width": 1.4 }));
+      g.appendChild(el2("line", { x1: bx, y1: by, x2: p.x - nx * W, y2: p.y - ny * W, stroke: "#9fb0cf", "stroke-width": 1.4 }));
+      return g;
+    }
+    if (kind === "barone") { // "one" — a single perpendicular tick
+      const D = 11, W = 7, mx = p.x - c * D, my = p.y - s * D;
+      return el2("line", { x1: mx + nx * W, y1: my + ny * W, x2: mx - nx * W, y2: my - ny * W, stroke: "#9fb0cf", "stroke-width": 1.6 });
+    }
     return el2("g", {});
   }
   function border(n, toward) {
@@ -372,6 +420,15 @@
     }
     roots.forEach(measure);
 
+    // FK column names per table (for ER rendering)
+    const fkCols = new Map();
+    for (const r of model.relationships) {
+      if (r.type === "fk" && r.fkColumn) {
+        if (!fkCols.has(r.sourceId)) fkCols.set(r.sourceId, new Set());
+        fkCols.get(r.sourceId).add(r.fkColumn);
+      }
+    }
+
     // draw (pre-order), accumulating absolute positions
     const absById = new Map();
     const containers = [];
@@ -379,6 +436,7 @@
       const ax = ox + e.node.x, ay = oy + e.node.y;
       absById.set(e.el.id, { x: ax, y: ay, w: e.node.w, h: e.node.h });
       const g = el2("g", { class: "uml-node", "data-id": e.el.id, transform: `translate(${e.node.x},${e.node.y})` });
+      if (e.el.type === "dbtable") e.node._fkCols = fkCols.get(e.el.id);
       drawShape(g, e.el, e.node);
       parentG.appendChild(g);
       const childList = kids.get(e.el.id) || [];

@@ -134,6 +134,7 @@
     if (!S.model) return;
     if (kind === "xmi") download(XmiExport.toXmi(S.model), safe(S.project.name) + ".xmi", "application/xml");
     else if (kind === "json") download(JSON.stringify(S.model, null, 2), safe(S.project.name) + ".json", "application/json");
+    else if (kind === "sql") download(SqlExport.toSql(S.model), safe(S.project.name) + ".sql", "text/plain");
     else if (kind === "svg") exportSvg();
   }
   function exportSvg() {
@@ -453,6 +454,7 @@
     if (el.type === "lifeline") {
       p.appendChild(textField("Represents (classifier)", el.represents || "", (v) => { el.represents = v; touch(true); }));
     }
+    if (el.type === "dbtable") columnSection(p, el);
     if (el.type === "note") {
       p.appendChild(areaField("Text", el.name, (v) => { el.name = v; touch(true); }));
     }
@@ -515,6 +517,32 @@
     });
     p.appendChild(sec);
   }
+  function columnSection(p, el) {
+    const sec = h(`<div class="prop-section"><h4>Columns <button class="mini" title="Add">＋</button></h4></div>`);
+    sec.querySelector(".mini").addEventListener("click", () => { el.columns.push(Model.newColumn()); touch(true); reselect(); });
+    el.columns.forEach((c, i) => {
+      const row = document.createElement("div"); row.className = "feat-row";
+      row.appendChild(inp("nm", c.name, "name", (v) => { c.name = v; touch(true); }));
+      row.appendChild(inp("ty", c.dataType, "TYPE", (v) => { c.dataType = v; touch(true); }));
+      row.appendChild(delBtn(() => { el.columns.splice(i, 1); touch(true); reselect(); }));
+      sec.appendChild(row);
+      const row2 = document.createElement("div"); row2.className = "feat-row";
+      row2.appendChild(miniCheck("PK", c.pk, (v) => { c.pk = v; if (v) c.nullable = false; touch(true); reselect(); }));
+      row2.appendChild(miniCheck("NOT NULL", c.nullable === false, (v) => { c.nullable = !v; touch(true); }));
+      row2.appendChild(miniCheck("UNIQUE", c.unique, (v) => { c.unique = v; touch(true); }));
+      row2.appendChild(inp("ty", c.defaultValue, "default", (v) => { c.defaultValue = v; touch(false); }));
+      sec.appendChild(row2);
+    });
+    p.appendChild(sec);
+  }
+  function miniCheck(label, val, on) {
+    const w = document.createElement("label");
+    w.style.cssText = "display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);white-space:nowrap";
+    const c = document.createElement("input"); c.type = "checkbox"; c.checked = !!val;
+    c.addEventListener("change", () => on(c.checked));
+    w.appendChild(c); w.appendChild(document.createTextNode(label));
+    return w;
+  }
   function featureSection(p, title, arr, def, rowFn, add) {
     const sec = h(`<div class="prop-section"><h4>${title} <button class="mini">＋</button></h4></div>`);
     sec.querySelector(".mini").addEventListener("click", () => { add(); touch(true); reselect(); });
@@ -546,6 +574,14 @@
       return;
     }
     p.appendChild(selectField("Type", opts, (v) => { r.type = v; touch(true); reselect(); }));
+    if (r.type === "fk") {
+      const src = Model.elementById(S.model, r.sourceId), tgt = Model.elementById(S.model, r.targetId);
+      p.appendChild(h(`<div class="muted" style="font-size:12px;margin-bottom:8px">FK: ${esc(src ? src.name : "child")} → ${esc(tgt ? tgt.name : "parent")}</div>`));
+      p.appendChild(textField(`FK column (in ${src ? src.name : "child"})`, r.fkColumn || "", (v) => { r.fkColumn = v; touch(true); }));
+      p.appendChild(textField(`References column (in ${tgt ? tgt.name : "parent"})`, r.refColumn || "", (v) => { r.refColumn = v; touch(false); }));
+      p.appendChild(deleteBtn("Delete foreign key", () => S.editor.deleteSelection()));
+      return;
+    }
     if (r.type === "transition") {
       p.appendChild(textField("Trigger (event)", r.trigger || "", (v) => { r.trigger = v; touch(true); }));
       p.appendChild(textField("Guard [condition]", r.guard || "", (v) => { r.guard = v; touch(true); }));
@@ -669,7 +705,7 @@
       component: "⬡", package: "📦", block: "▢", valueType: "#", constraint: "∑",
       interfaceBlock: "◷", requirement: "❒", actor: "☺", usecase: "◯", state: "▭",
       initial: "●", final: "◉", choice: "◇", composite: "▣", forkjoin: "▬", junction: "•", history: "Ⓗ",
-      part: "▦", port: "▪", note: "🗒", instance: "▤", lifeline: "▯",
+      part: "▦", port: "▪", note: "🗒", instance: "▤", lifeline: "▯", dbtable: "▤",
     })[type] || "▣";
   }
   function download(content, name, mime) {
