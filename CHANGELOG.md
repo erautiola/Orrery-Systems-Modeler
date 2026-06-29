@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - **Activity diagrams** — actions, decision/merge, fork/join, initial/final/flow-final,
   object nodes, and **swimlane partitions** (drag nodes in to assign lanes);
   **control flow** (with `[guard]`) and **object flow** connectors.
+- **Parametric diagrams (SysML)** — constraint properties (`{expression}` +
+  parameters) and value properties (type/value), joined by **binding connectors**.
 
 ## [0.1.2] - 2026-06-29
 

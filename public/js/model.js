@@ -64,6 +64,9 @@
     lifeline:     { label: "Lifeline",      shape: "lifeline",   compartments: [] },
     // --- data modeling (ER) ---
     dbtable:      { label: "DB Table",      shape: "dbtable",    compartments: [], stereotype: "table" },
+    // --- SysML parametric ---
+    constraintProp:{ label: "Constraint",   shape: "constraintprop", compartments: [], stereotype: "constraint" },
+    valueProp:    { label: "Value Property", shape: "valueprop",  compartments: [] },
     note:         { label: "Note",          shape: "note",       compartments: [] },
   };
 
@@ -98,6 +101,8 @@
     // --- activity ---
     controlflow:   { label: "Control Flow", line: "solid",  targetEnd: "open" },
     objectflow:    { label: "Object Flow",  line: "dashed", targetEnd: "open" },
+    // --- parametric ---
+    binding:       { label: "Binding Connector", line: "solid", targetEnd: "none" },
   };
 
   // ---- diagram type catalog (palettes) ----------------------------------
@@ -157,6 +162,11 @@
       elements: ["action", "decision", "forkjoin", "initial", "final", "flowfinal", "objectNode", "partition", "note"],
       relationships: ["controlflow", "objectflow", "anchor"],
     },
+    parametric: {
+      label: "Parametric Diagram", abbr: "par",
+      elements: ["constraintProp", "valueProp", "note"],
+      relationships: ["binding", "anchor"],
+    },
   };
 
   const VISIBILITIES = ["public", "private", "protected", "package"];
@@ -202,6 +212,8 @@
     if (actualType === "history") el.deep = false;
     if (actualType === "lifeline") el.represents = "";
     if (actualType === "dbtable") el.columns = [];
+    if (actualType === "constraintProp") { el.expression = ""; el.parameters = []; }
+    if (actualType === "valueProp") { el.valueType = ""; el.value = ""; }
     return el;
   }
   function newColumn(name) {

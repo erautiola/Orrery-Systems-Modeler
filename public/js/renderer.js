@@ -89,6 +89,18 @@
     if (spec.shape === "action") return { w: Math.max(100, tw(el.name, F_NAME) + 32), h: 44 };
     if (spec.shape === "objectnode") return { w: Math.max(90, tw(el.name, F_NAME) + 24), h: 38 };
     if (spec.shape === "partition") return { w: 200, h: 240 }; // base; grows to fit children
+    if (spec.shape === "valueprop") {
+      const t = el.name + (el.valueType ? " : " + el.valueType : "") + (el.value ? " = " + el.value : "");
+      return { w: Math.max(90, tw(t, F_FEAT) + 24), h: 36 };
+    }
+    if (spec.shape === "constraintprop") {
+      const ps = el.parameters || [];
+      let w = Math.max(140, tw(el.name, F_NAME) + 28);
+      if (el.expression) w = Math.max(w, tw("{" + el.expression + "}", F_FEAT) + 24);
+      for (const p of ps) w = Math.max(w, tw(p, F_FEAT) + 24);
+      const h = 30 + (el.expression ? LINE : 0) + Math.max(ps.length * LINE + 6, 6);
+      return { w: Math.round(Math.min(w, 360)), h: Math.round(h) };
+    }
 
     const stereo = Model.stereoText(el);
     let w = Math.max(MINW, tw(el.name, F_NAME) + PADX * 2);
@@ -155,6 +167,8 @@
       case "dbtable": drawDbTable(g, el, node); break;
       case "action": drawAction(g, el, W, H); break;
       case "objectnode": drawObjectNode(g, el, W, H); break;
+      case "constraintprop": drawConstraintProp(g, el, node); break;
+      case "valueprop": drawValueProp(g, el, W, H); break;
       case "partition": drawPartition(g, el, node); break;
       case "flowfinal":
         g.appendChild(el2("circle", { cx: W / 2, cy: H / 2, r: 12, fill: "#fff", stroke: "#1a2236", "stroke-width": 1.5 }));
@@ -282,6 +296,23 @@
     g.appendChild(el2("rect", { width: W, height: 24, fill: "#dde9ff" }));
     g.appendChild(el2("line", { x1: 0, y1: 24, x2: W, y2: 24, stroke: "#5b9bff" }));
     g.appendChild(text(W / 2, 16, el.name, { "text-anchor": "middle", "font-weight": 700, "font-size": 12, fill: "#1a2236" }));
+  }
+
+  function drawConstraintProp(g, el, node) {
+    const W = node.w, H = node.h, ac = { head: "#f0e6ff", bar: "#c084fc" };
+    g.appendChild(el2("rect", { class: "node-bg", width: W, height: H, rx: 10, fill: "#fff", stroke: ac.bar, "stroke-width": 1.3 }));
+    g.appendChild(el2("rect", { width: W, height: 26, rx: 10, fill: ac.head }));
+    g.appendChild(el2("rect", { y: 14, width: W, height: 12, fill: ac.head }));
+    g.appendChild(text(W / 2, 11, "«constraint»", { "text-anchor": "middle", "font-style": "italic", "font-size": 10, fill: "#6b4ea8" }));
+    g.appendChild(text(W / 2, 22, el.name, { "text-anchor": "middle", "font-weight": 700, "font-size": 12, fill: "#1a2236" }));
+    let y = 40;
+    if (el.expression) { g.appendChild(text(W / 2, y, "{" + el.expression + "}", { "text-anchor": "middle", "font-size": 11, fill: "#1a2236", "font-family": "'Cascadia Code', monospace" })); y += LINE; }
+    for (const p of (el.parameters || [])) { g.appendChild(text(PADX, y, p, { "font-size": 11, fill: "#1a2236", "font-family": "'Cascadia Code', monospace" })); y += LINE; }
+  }
+  function drawValueProp(g, el, W, H) {
+    g.appendChild(el2("rect", { class: "node-bg", width: W, height: H, rx: 3, fill: "#eef4ff", stroke: "#3a4a6b", "stroke-width": 1.2 }));
+    const t = el.name + (el.valueType ? " : " + el.valueType : "") + (el.value ? " = " + el.value : "");
+    g.appendChild(text(W / 2, H / 2 + 4, t, { "text-anchor": "middle", "font-size": 12, fill: "#1a2236" }));
   }
 
   function drawPart(g, el, W, H) {
