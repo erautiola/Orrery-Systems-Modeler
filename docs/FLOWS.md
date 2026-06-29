@@ -2,6 +2,32 @@
 
 UML behavioral views of the key interactions. Sources in [`docs/diagrams/`](diagrams).
 
+## Activity (example)
+
+An Activity diagram models control flow through actions, decisions, and forks
+(optionally grouped into swimlane partitions).
+
+![Activity](https://www.plantuml.com/plantuml/proxy?cache=no&fmt=svg&src=https://raw.githubusercontent.com/erautiola/Orrery-Systems-Modeler/main/docs/diagrams/activity.puml)
+
+<details><summary>PlantUML source</summary>
+
+```plantuml
+@startuml activity
+title Order fulfilment — Activity
+skinparam shadowing false
+start
+:Pick items;
+if (in stock?) then (yes)
+  :Pack order;
+  :Ship;
+else (no)
+  :Backorder;
+endif
+stop
+@enduml
+```
+</details>
+
 ## Use cases
 
 ![Use cases](https://www.plantuml.com/plantuml/proxy?cache=no&fmt=svg&src=https://raw.githubusercontent.com/erautiola/Orrery-Systems-Modeler/main/docs/diagrams/usecase.puml)

@@ -54,6 +54,12 @@
     forkjoin:     { label: "Fork / Join",   shape: "forkjoin",   compartments: [], fixedSize: [90, 10] },
     junction:     { label: "Junction",      shape: "junction",   compartments: [], fixedSize: [18, 18] },
     history:      { label: "History",       shape: "history",    compartments: [], fixedSize: [24, 24] },
+    // --- activity ---
+    action:       { label: "Action",        shape: "action",     compartments: [] },
+    objectNode:   { label: "Object Node",   shape: "objectnode", compartments: [] },
+    decision:     { label: "Decision / Merge", shape: "choice",  compartments: [], fixedSize: [40, 30] },
+    flowfinal:    { label: "Flow Final",    shape: "flowfinal",  compartments: [], fixedSize: [26, 26] },
+    partition:    { label: "Partition",     shape: "partition",  compartments: [], container: true },
     // --- interaction (sequence) ---
     lifeline:     { label: "Lifeline",      shape: "lifeline",   compartments: [] },
     // --- data modeling (ER) ---
@@ -89,6 +95,9 @@
     msgDestroy:    { label: "Destroy Message", msg: true, line: "solid",  targetEnd: "open", destroy: true },
     // --- ER (crow's-foot): child(many) -> parent(one) ---
     fk:            { label: "Foreign Key",  line: "solid", sourceEnd: "crowsfoot", targetEnd: "barone" },
+    // --- activity ---
+    controlflow:   { label: "Control Flow", line: "solid",  targetEnd: "open" },
+    objectflow:    { label: "Object Flow",  line: "dashed", targetEnd: "open" },
   };
 
   // ---- diagram type catalog (palettes) ----------------------------------
@@ -142,6 +151,11 @@
       label: "ER / Data Model", abbr: "er",
       elements: ["dbtable", "note"],
       relationships: ["fk", "anchor"],
+    },
+    activity: {
+      label: "Activity Diagram", abbr: "act",
+      elements: ["action", "decision", "forkjoin", "initial", "final", "flowfinal", "objectNode", "partition", "note"],
+      relationships: ["controlflow", "objectflow", "anchor"],
     },
   };
 
@@ -208,6 +222,7 @@
     if (type === "transition") { r.trigger = ""; r.guard = ""; r.effect = ""; }
     if (RELATIONSHIPS[type] && RELATIONSHIPS[type].msg) { r.y = 0; r.args = ""; r.returnValue = ""; }
     if (type === "fk") { r.fkColumn = ""; r.refColumn = ""; }
+    if (type === "controlflow") { r.guard = ""; }
     return r;
   }
   // UML transition label: "trigger [guard] / effect"

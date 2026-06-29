@@ -1,0 +1,13 @@
+@startuml activity
+title Order fulfilment — Activity
+skinparam shadowing false
+start
+:Pick items;
+if (in stock?) then (yes)
+  :Pack order;
+  :Ship;
+else (no)
+  :Backorder;
+endif
+stop
+@enduml

@@ -19,7 +19,7 @@ reach that host/port shares the same project library.
 
 Add with the **＋** beside *Diagrams*. Types: Class, Package, Component,
 SysML **BDD**, SysML **IBD**, **Requirement**, **Use Case**, **State Machine**,
-**Sequence**, **ER / Data Model**.
+**Sequence**, **ER / Data Model**, **Activity**.
 
 - Pick an **element tool** in the palette, then click the canvas to place it.
 - Pick a **relationship tool**, then **drag from source to target**.
@@ -43,6 +43,12 @@ Place **DB Table** elements; in Properties add **Columns** (name, type, and the
 drag from a child table to its parent (crow's‑foot notation); set the FK column
 and referenced column in the relationship's Properties. Then **Export → SQL DDL
 (.sql)** to generate `CREATE TABLE` + foreign‑key constraints.
+
+### Activity
+Place **Action**, **Decision/Merge**, **Fork/Join**, **Initial**, **Final**,
+**Flow Final**, and **Object Node** elements, and connect them with **Control
+Flow** (add a `[guard]` in Properties) or **Object Flow**. Drop a **Partition**
+(swimlane) and drag actions into it to assign them to that lane.
 
 ## Tables & matrices
 

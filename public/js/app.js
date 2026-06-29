@@ -586,6 +586,8 @@
       p.appendChild(textField("Trigger (event)", r.trigger || "", (v) => { r.trigger = v; touch(true); }));
       p.appendChild(textField("Guard [condition]", r.guard || "", (v) => { r.guard = v; touch(true); }));
       p.appendChild(textField("Effect / behavior", r.effect || "", (v) => { r.effect = v; touch(true); }));
+    } else if (r.type === "controlflow") {
+      p.appendChild(textField("Guard [condition]", r.guard || "", (v) => { r.guard = v; touch(true); }));
     } else {
       p.appendChild(textField("Name / label", r.name, (v) => { r.name = v; touch(true); }));
       const r2 = h(`<div class="row2"></div>`);
@@ -706,6 +708,7 @@
       interfaceBlock: "◷", requirement: "❒", actor: "☺", usecase: "◯", state: "▭",
       initial: "●", final: "◉", choice: "◇", composite: "▣", forkjoin: "▬", junction: "•", history: "Ⓗ",
       part: "▦", port: "▪", note: "🗒", instance: "▤", lifeline: "▯", dbtable: "▤",
+      action: "▭", objectNode: "▭", decision: "◇", flowfinal: "⊗", partition: "▥",
     })[type] || "▣";
   }
   function download(content, name, mime) {
