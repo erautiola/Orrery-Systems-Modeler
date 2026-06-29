@@ -56,6 +56,8 @@
     history:      { label: "History",       shape: "history",    compartments: [], fixedSize: [24, 24] },
     // --- interaction (sequence) ---
     lifeline:     { label: "Lifeline",      shape: "lifeline",   compartments: [] },
+    // --- data modeling (ER) ---
+    dbtable:      { label: "DB Table",      shape: "dbtable",    compartments: [], stereotype: "table" },
     note:         { label: "Note",          shape: "note",       compartments: [] },
   };
 
@@ -85,6 +87,8 @@
     msgReply:      { label: "Reply",           msg: true, line: "dashed", targetEnd: "open" },
     msgCreate:     { label: "Create Message",  msg: true, line: "dashed", targetEnd: "open", keyword: "create" },
     msgDestroy:    { label: "Destroy Message", msg: true, line: "solid",  targetEnd: "open", destroy: true },
+    // --- ER (crow's-foot): child(many) -> parent(one) ---
+    fk:            { label: "Foreign Key",  line: "solid", sourceEnd: "crowsfoot", targetEnd: "barone" },
   };
 
   // ---- diagram type catalog (palettes) ----------------------------------
@@ -134,6 +138,11 @@
       elements: ["lifeline", "note"],
       relationships: ["msgSync", "msgAsync", "msgReply", "msgCreate", "msgDestroy"],
     },
+    er: {
+      label: "ER / Data Model", abbr: "er",
+      elements: ["dbtable", "note"],
+      relationships: ["fk", "anchor"],
+    },
   };
 
   const VISIBILITIES = ["public", "private", "protected", "package"];
@@ -178,7 +187,12 @@
     }
     if (actualType === "history") el.deep = false;
     if (actualType === "lifeline") el.represents = "";
+    if (actualType === "dbtable") el.columns = [];
     return el;
+  }
+  function newColumn(name) {
+    return { id: uid("col"), name: name || "column", dataType: "", pk: false,
+      nullable: true, unique: false, defaultValue: "" };
   }
   function newAttribute(name) {
     return { id: uid("attr"), name: name || "attribute", type: "", visibility: "private",
@@ -193,6 +207,7 @@
       sourceMult: "", targetMult: "", sourceRole: "", targetRole: "", label: "" };
     if (type === "transition") { r.trigger = ""; r.guard = ""; r.effect = ""; }
     if (RELATIONSHIPS[type] && RELATIONSHIPS[type].msg) { r.y = 0; r.args = ""; r.returnValue = ""; }
+    if (type === "fk") { r.fkColumn = ""; r.refColumn = ""; }
     return r;
   }
   // UML transition label: "trigger [guard] / effect"
@@ -237,7 +252,7 @@
 
   global.Model = {
     uid, ELEMENTS, RELATIONSHIPS, DIAGRAMS, VISIBILITIES, TABLES,
-    newModel, newElement, newAttribute, newOperation, newRelationship, newDiagram, newTable,
+    newModel, newElement, newAttribute, newOperation, newRelationship, newDiagram, newTable, newColumn,
     elementById, relsTouching, removeElement, removeRelationship, stereoText, transitionLabel, messageLabel,
   };
 })(window);
