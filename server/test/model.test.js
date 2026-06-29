@@ -48,6 +48,16 @@ test("newRelationship adds type-specific fields", () => {
   assert.equal(Model.newRelationship("transition").guard, "");
   assert.equal(Model.newRelationship("fk").fkColumn, "");
   assert.equal(Model.newRelationship("msgSync").y, 0);
+  assert.equal(Model.newRelationship("controlflow").guard, "");
+});
+
+test("Activity diagram type and its elements/relationships exist", () => {
+  assert.ok(Model.DIAGRAMS.activity, "activity diagram type");
+  assert.ok(Model.DIAGRAMS.activity.elements.includes("action"));
+  assert.ok(Model.DIAGRAMS.activity.elements.includes("partition"));
+  assert.ok(Model.DIAGRAMS.activity.relationships.includes("controlflow"));
+  assert.ok(Model.RELATIONSHIPS.controlflow && Model.RELATIONSHIPS.objectflow);
+  assert.ok(Model.ELEMENTS.action && Model.ELEMENTS.partition && Model.ELEMENTS.flowfinal);
 });
 
 test("label helpers format correctly", () => {

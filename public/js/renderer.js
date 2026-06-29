@@ -86,6 +86,9 @@
       const h = 28 + Math.max(cols.length ? cols.length * LINE + 8 : 14, 14);
       return { w: Math.round(Math.min(w, 360)), h: Math.round(h) };
     }
+    if (spec.shape === "action") return { w: Math.max(100, tw(el.name, F_NAME) + 32), h: 44 };
+    if (spec.shape === "objectnode") return { w: Math.max(90, tw(el.name, F_NAME) + 24), h: 38 };
+    if (spec.shape === "partition") return { w: 200, h: 240 }; // base; grows to fit children
 
     const stereo = Model.stereoText(el);
     let w = Math.max(MINW, tw(el.name, F_NAME) + PADX * 2);
@@ -113,6 +116,7 @@
       case "component": return { head: "#fff2d9", bar: "#f6c453" };
       case "actor": case "usecase": return { head: "#dde9ff", bar: "#5b9bff" };
       case "state": return { head: "#e3ecff", bar: "#5b9bff" };
+      case "action": return { head: "#eef5ff", bar: "#5b9bff" };
       case "dbtable": return { head: "#dcefe9", bar: "#1E9C8C" };
       case "part": return { head: "#e8f0ff", bar: "#5b9bff" };
       default: return { head: "#e8eefb", bar: "#5b9bff" };
@@ -121,11 +125,14 @@
 
   // ---- containment helpers ----------------------------------------------
   function isContainer(el, hasKids) {
-    return (el.type === "state" && (el.isComposite || hasKids)) || (el.type === "package" && hasKids);
+    return (el.type === "state" && (el.isComposite || hasKids)) ||
+           (el.type === "package" && hasKids) ||
+           el.type === "partition";
   }
   // where children start inside a container (relative to the container box)
   function contentOrigin(el, node) {
     if (el.type === "package") return { dx: 6, dy: 22 };
+    if (el.type === "partition") return { dx: 8, dy: 28 };
     // composite state: below the title + internal activities
     return { dx: C_PAD, dy: node._titleH || compositeTitleH(el) };
   }
@@ -146,6 +153,13 @@
       case "requirement": drawRequirement(g, el, node); break;
       case "state": drawState(g, el, node); break;
       case "dbtable": drawDbTable(g, el, node); break;
+      case "action": drawAction(g, el, W, H); break;
+      case "objectnode": drawObjectNode(g, el, W, H); break;
+      case "partition": drawPartition(g, el, node); break;
+      case "flowfinal":
+        g.appendChild(el2("circle", { cx: W / 2, cy: H / 2, r: 12, fill: "#fff", stroke: "#1a2236", "stroke-width": 1.5 }));
+        g.appendChild(el2("line", { x1: W / 2 - 7, y1: H / 2 - 7, x2: W / 2 + 7, y2: H / 2 + 7, stroke: "#1a2236", "stroke-width": 1.6 }));
+        g.appendChild(el2("line", { x1: W / 2 - 7, y1: H / 2 + 7, x2: W / 2 + 7, y2: H / 2 - 7, stroke: "#1a2236", "stroke-width": 1.6 })); break;
       case "part": drawPart(g, el, W, H); break;
       case "note": drawNote(g, el, W, H); break;
       case "forkjoin": g.appendChild(el2("rect", { width: W, height: H, rx: 2, fill: "#1a2236" })); break;
@@ -253,6 +267,23 @@
     }
   }
 
+  function drawAction(g, el, W, H) {
+    const ac = accent(el);
+    g.appendChild(el2("rect", { class: "node-bg", width: W, height: H, rx: 16, fill: "#eef5ff", stroke: ac.bar, "stroke-width": 1.3 }));
+    g.appendChild(text(W / 2, H / 2 + 4, el.name, { "text-anchor": "middle", "font-weight": 600, "font-size": 13, fill: "#1a2236" }));
+  }
+  function drawObjectNode(g, el, W, H) {
+    g.appendChild(el2("rect", { class: "node-bg", width: W, height: H, fill: "#fff", stroke: "#3a4a6b", "stroke-width": 1.3 }));
+    g.appendChild(text(W / 2, H / 2 + 4, el.name, { "text-anchor": "middle", "font-weight": 600, "font-size": 12, fill: "#1a2236" }));
+  }
+  function drawPartition(g, el, node) {
+    const W = node.w, H = node.h;
+    g.appendChild(el2("rect", { class: "node-bg", width: W, height: H, fill: "rgba(91,155,255,0.04)", stroke: "#5b9bff", "stroke-width": 1.2 }));
+    g.appendChild(el2("rect", { width: W, height: 24, fill: "#dde9ff" }));
+    g.appendChild(el2("line", { x1: 0, y1: 24, x2: W, y2: 24, stroke: "#5b9bff" }));
+    g.appendChild(text(W / 2, 16, el.name, { "text-anchor": "middle", "font-weight": 700, "font-size": 12, fill: "#1a2236" }));
+  }
+
   function drawPart(g, el, W, H) {
     g.appendChild(el2("rect", { class: "node-bg", width: W, height: H, rx: 4, fill: "#eef4ff", stroke: "#3a4a6b", "stroke-width": 1.3 }));
     const label = el.name + (el.attributes && el.attributes[0] && el.attributes[0].type ? " : " + el.attributes[0].type : "");
@@ -305,6 +336,7 @@
     const g = el2("g", { class: "edge", "data-id": rel.id });
     const dashed = spec.line === "dashed";
     const labelText = rel.type === "transition" ? Model.transitionLabel(rel)
+      : rel.type === "controlflow" ? (rel.guard ? "[" + rel.guard + "]" : (rel.name || ""))
       : (rel.name || rel.label || (spec.keyword ? "«" + spec.keyword + "»" : ""));
 
     if (rel.sourceId === rel.targetId) { // self-transition loop

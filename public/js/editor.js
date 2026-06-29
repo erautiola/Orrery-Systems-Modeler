@@ -206,6 +206,7 @@
     function canNest(parentEl, childType) {
       if (!parentEl) return false;
       if (parentEl.type === "state") return ["state", "initial", "final", "choice", "forkjoin", "junction", "history", "note"].includes(childType);
+      if (parentEl.type === "partition") return ["action", "decision", "forkjoin", "initial", "final", "flowfinal", "objectNode", "note"].includes(childType);
       if (parentEl.type === "package") return childType !== "note";
       return false;
     }

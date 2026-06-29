@@ -70,7 +70,7 @@ Set `PORT` and `DATA_DIR` env vars to override the port and storage location.
 **Authoring**
 - Multiple diagrams per project, of these types:
   Class, Package, Component, **SysML BDD**, **SysML IBD**, **Requirement**,
-  Use Case, **State Machine**, **Sequence**, **ER / Data Model**.
+  Use Case, **State Machine**, **Sequence**, **ER / Data Model**, **Activity**.
 - **ER / Data Model**: database tables with columns (type, PK, NOT NULL, UNIQUE,
   default), foreign keys in **crow's-foot** notation, and **SQL DDL export**
   (`CREATE TABLE` + FK constraints) via Export → SQL DDL.
@@ -162,7 +162,7 @@ Planned next phases (real-time co-editing is intentionally **out of scope** —
 the model is *shared library, separate work*: everyone shares projects, saves are
 conflict-checked):
 
-- **Activity** and **Parametric** diagrams (Sequence and ER/SQL are done) — plus
+- **Parametric** diagrams (Activity, Sequence, and ER/SQL are done) — plus
   Timing & Communication.
 - Accounts / permissions, model validation rules, undo-redo history, and richer
   IBD port/flow semantics.
