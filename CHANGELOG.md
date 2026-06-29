@@ -10,8 +10,10 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   UNIQUE, default), foreign-key relationships in **crow's-foot** notation, and
   **SQL DDL export** (`CREATE TABLE` + `ALTER TABLE … FOREIGN KEY`, reserved-word
   quoting). New "SQL DDL (.sql)" entry in the Export menu.
-- **Test suite** — unit tests for the project store and integration tests that
-  drive the REST API over HTTP (Node's built-in `node --test`; no new deps).
+- **Test suite** — unit tests for the project store, the **SQL DDL generator**,
+  and the **model factory/catalog**, plus integration tests that drive the REST
+  API over HTTP (Node's built-in `node --test`; no new deps). `model.js` and
+  `sql-export.js` are now dual-environment (browser + Node) so they're testable.
 - CI now **runs unit + integration tests** (dedicated job) and **re-runs the
   suite inside the freshly built Docker image** before a build is considered green.
 - **Dependabot auto-merge** workflow — patch/minor and GitHub-Actions updates

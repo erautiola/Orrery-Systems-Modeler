@@ -117,3 +117,61 @@ Element "0..1" o-- "*" Element : ownerId (containment)
   how it draws.
 - **Tables** are views, not data: an `element` table filters/renders elements
   into editable cells; a `matrix` reads/writes relationships of a chosen type.
+
+## Database / ER tables (data modeling)
+
+The **ER / Data Model** diagram type models relational schemas. A `dbtable`
+element carries `columns` (`{ name, dataType, pk, nullable, unique, defaultValue }`)
+instead of UML attributes, and a `fk` relationship (crow's-foot notation) links a
+child table to its parent, carrying `fkColumn` / `refColumn`.
+
+![ER example](https://www.plantuml.com/plantuml/proxy?cache=no&fmt=svg&src=https://raw.githubusercontent.com/erautiola/Orrery-Systems-Modeler/main/docs/diagrams/er-data-model.puml)
+
+<details><summary>PlantUML source</summary>
+
+```plantuml
+@startuml er-data-model
+hide circle
+skinparam linetype ortho
+entity customer {
+  * id : INT <<PK>>
+  --
+  * email : VARCHAR(255) <<unique>>
+  name : VARCHAR(120)
+}
+entity "order" as ord {
+  * id : INT <<PK>>
+  --
+  * customer_id : INT <<FK>>
+  total : DECIMAL(10,2)
+  placed_at : TIMESTAMP
+}
+customer ||--o{ ord : places
+@enduml
+```
+</details>
+
+**Export → SQL DDL** turns that into runnable DDL (PK / NOT NULL / UNIQUE /
+DEFAULT, composite keys, FK constraints, and reserved-word quoting):
+
+```sql
+CREATE TABLE customer (
+  id INT NOT NULL,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  name VARCHAR(120),
+  PRIMARY KEY (id)
+);
+
+CREATE TABLE "order" (
+  id INT NOT NULL,
+  customer_id INT NOT NULL,
+  total DECIMAL(10,2),
+  placed_at TIMESTAMP,
+  PRIMARY KEY (id)
+);
+
+ALTER TABLE "order" ADD CONSTRAINT fk_order_1
+  FOREIGN KEY (customer_id) REFERENCES customer (id);
+```
+
+SQL generation is covered by unit tests in `server/test/sql-export.test.js`.

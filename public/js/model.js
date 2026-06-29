@@ -12,7 +12,7 @@
  * The catalog (ELEMENTS / RELATIONSHIPS / DIAGRAMS) is the single source of
  * truth for what each diagram type offers in its palette and how things draw.
  * ==========================================================================*/
-(function (global) {
+(function (root) {
   "use strict";
 
   let _seq = 0;
@@ -250,9 +250,11 @@
     return list.length ? "«" + list.join(", ") + "»" : null;
   }
 
-  global.Model = {
+  const api = {
     uid, ELEMENTS, RELATIONSHIPS, DIAGRAMS, VISIBILITIES, TABLES,
     newModel, newElement, newAttribute, newOperation, newRelationship, newDiagram, newTable, newColumn,
     elementById, relsTouching, removeElement, removeRelationship, stereoText, transitionLabel, messageLabel,
   };
-})(window);
+  if (typeof module !== "undefined" && module.exports) module.exports = api; // Node (tests)
+  if (root) root.Model = api;                                                // browser
+})(typeof window !== "undefined" ? window : null);

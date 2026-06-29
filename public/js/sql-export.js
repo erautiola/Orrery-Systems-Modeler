@@ -2,7 +2,7 @@
  * sql-export.js — Generate SQL DDL (CREATE TABLE + FK constraints) from the
  * model's database tables (type "dbtable") and foreign-key relationships.
  * ==========================================================================*/
-(function (global) {
+(function (root) {
   "use strict";
 
   // common SQL reserved words — quoted even though they match the safe pattern
@@ -58,5 +58,7 @@
     return out.join("\n") + "\n";
   }
 
-  global.SqlExport = { toSql };
-})(window);
+  const api = { toSql };
+  if (typeof module !== "undefined" && module.exports) module.exports = api; // Node (tests)
+  if (root) root.SqlExport = api;                                            // browser
+})(typeof window !== "undefined" ? window : null);
