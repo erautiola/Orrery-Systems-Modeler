@@ -6,6 +6,9 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- **Light / dark theme toggle** — a top-bar switch (persisted to the browser,
+  defaulting to OS preference). The chrome and the SVG diagram palette (canvas,
+  edges, labels, markers) are theme-aware via CSS variables read by the renderers.
 - **Activity diagrams** — actions, decision/merge, fork/join, initial/final/flow-final,
   object nodes, and **swimlane partitions** (drag nodes in to assign lanes);
   **control flow** (with `[guard]`) and **object flow** connectors.

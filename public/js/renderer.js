@@ -23,6 +23,17 @@
   const tw = (s, f) => { _ctx.font = f; return _ctx.measureText(s || "").width; };
   const VIS = { public: "+", private: "−", protected: "#", package: "~" };
 
+  // theme-aware diagram palette, refreshed from CSS variables on each render()
+  let PAL = { edge: "#9fb0cf", edgeText: "#e6ecf5", edgeDim: "#c6d2e8", canvas: "#0c111b" };
+  function readPalette() {
+    try {
+      const cs = getComputedStyle(document.documentElement);
+      const g = (k, d) => (cs.getPropertyValue(k).trim() || d);
+      return { edge: g("--edge", "#9fb0cf"), edgeText: g("--edge-text", "#e6ecf5"),
+        edgeDim: g("--edge-text-dim", "#c6d2e8"), canvas: g("--canvas", "#0c111b") };
+    } catch (e) { return PAL; }
+  }
+
   // ---- feature formatting ------------------------------------------------
   function attrLine(a) {
     let s = (VIS[a.visibility] || "+") + " " + (a.isDerived ? "/" : "") + (a.name || "");
@@ -189,7 +200,7 @@
         g.appendChild(el2("polygon", { points: `${W/2},2 ${W-2},${H/2} ${W/2},${H-2} 2,${H/2}`, fill: "#e3ecff", stroke: "#5b9bff", "stroke-width": 1.4 })); break;
       case "port":
         g.appendChild(el2("rect", { width: W, height: H, fill: "#e8f0ff", stroke: "#3a4a6b", "stroke-width": 1.4 }));
-        if (el.name) g.appendChild(text(W + 4, H / 2 + 4, el.name, { "font-size": 11, fill: "#c6d2e8" })); break;
+        if (el.name) g.appendChild(text(W + 4, H / 2 + 4, el.name, { "font-size": 11, fill: PAL.edgeDim })); break;
       default: drawClassifier(g, el, node, false);
     }
   }
@@ -256,7 +267,7 @@
     g.appendChild(el2("line", { x1: cx - 18, y1: 34, x2: cx + 18, y2: 34, ...s }));
     g.appendChild(el2("line", { x1: cx, y1: 54, x2: cx - 16, y2: 78, ...s }));
     g.appendChild(el2("line", { x1: cx, y1: 54, x2: cx + 16, y2: 78, ...s }));
-    g.appendChild(text(cx, H - 2, el.name, { "text-anchor": "middle", "font-weight": 600, "font-size": 13, fill: "#e6ecf5" }));
+    g.appendChild(text(cx, H - 2, el.name, { "text-anchor": "middle", "font-weight": 600, "font-size": 13, fill: PAL.edgeText }));
   }
   function drawUsecase(g, el, W, H) {
     g.appendChild(el2("ellipse", { cx: W / 2, cy: H / 2, rx: W / 2 - 2, ry: H / 2 - 2, fill: "#dde9ff", stroke: "#3a4a6b", "stroke-width": 1.3 }));
@@ -345,7 +356,7 @@
       const regions = Math.max(1, el.regions || 1);
       for (let i = 1; i < regions; i++) {
         const ry = titleH + (H - titleH) * (i / regions);
-        g.appendChild(el2("line", { x1: 0, y1: ry, x2: W, y2: ry, stroke: "#9fb0cf", "stroke-dasharray": "6 4" }));
+        g.appendChild(el2("line", { x1: 0, y1: ry, x2: W, y2: ry, stroke: PAL.edge, "stroke-dasharray": "6 4" }));
       }
     } else {
       g.appendChild(el2("rect", { width: W, height: 26, rx: 12, fill: ac.head }));
@@ -372,27 +383,27 @@
 
     if (rel.sourceId === rel.targetId) { // self-transition loop
       const x = s.x + s.w * 0.7, y = s.y, r = 16;
-      g.appendChild(el2("path", { d: `M ${x} ${y} C ${x + r} ${y - r * 2}, ${x + r * 2.4} ${y + r}, ${x + r * 0.6} ${y + r * 1.2}`, fill: "none", stroke: "#9fb0cf", "stroke-width": 1.5, "stroke-dasharray": dashed ? "7 5" : "none", class: "edge-line" }));
+      g.appendChild(el2("path", { d: `M ${x} ${y} C ${x + r} ${y - r * 2}, ${x + r * 2.4} ${y + r}, ${x + r * 0.6} ${y + r * 1.2}`, fill: "none", stroke: PAL.edge, "stroke-width": 1.5, "stroke-dasharray": dashed ? "7 5" : "none", class: "edge-line" }));
       g.appendChild(marker(spec.targetEnd || "open", { x: x + r * 0.6, y: y + r * 1.2 }, Math.PI * 0.75));
-      if (labelText) g.appendChild(text(x + r * 2.4, y, labelText, { "font-size": 11, fill: "#e6ecf5" }));
+      if (labelText) g.appendChild(text(x + r * 2.4, y, labelText, { "font-size": 11, fill: PAL.edgeText }));
       return g;
     }
 
     const sc = { x: s.x + s.w / 2, y: s.y + s.h / 2 }, tc = { x: t.x + t.w / 2, y: t.y + t.h / 2 };
     const p1 = border(s, tc), p2 = border(t, sc);
     g.appendChild(el2("line", { x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y, stroke: "transparent", "stroke-width": 12, class: "edge-hit" }));
-    const path = el2("line", { x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y, stroke: "#9fb0cf", "stroke-width": 1.5, class: "edge-line" });
+    const path = el2("line", { x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y, stroke: PAL.edge, "stroke-width": 1.5, class: "edge-line" });
     if (dashed) path.setAttribute("stroke-dasharray", "7 5");
     g.appendChild(path);
     const ang = Math.atan2(p2.y - p1.y, p2.x - p1.x);
     if (spec.targetEnd && spec.targetEnd !== "none") g.appendChild(marker(spec.targetEnd, p2, ang));
     if (spec.sourceEnd && spec.sourceEnd !== "none") g.appendChild(marker(spec.sourceEnd, p1, ang + Math.PI));
     const mid = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
-    if (labelText) g.appendChild(text(mid.x, mid.y - 5, labelText, { "text-anchor": "middle", "font-size": 11, fill: "#e6ecf5" }));
-    if (rel.sourceRole) g.appendChild(text(p1.x + Math.cos(ang) * 18, p1.y + Math.sin(ang) * 18 + 12, rel.sourceRole, { "font-size": 10, fill: "#c6d2e8", "text-anchor": "middle" }));
-    if (rel.targetRole) g.appendChild(text(p2.x - Math.cos(ang) * 18, p2.y - Math.sin(ang) * 18 + 12, rel.targetRole, { "font-size": 10, fill: "#c6d2e8", "text-anchor": "middle" }));
-    if (rel.sourceMult) g.appendChild(text(p1.x + Math.cos(ang) * 16, p1.y + Math.sin(ang) * 16 - 4, rel.sourceMult, { "font-size": 11, fill: "#c6d2e8", "text-anchor": "middle" }));
-    if (rel.targetMult) g.appendChild(text(p2.x - Math.cos(ang) * 16, p2.y - Math.sin(ang) * 16 - 4, rel.targetMult, { "font-size": 11, fill: "#c6d2e8", "text-anchor": "middle" }));
+    if (labelText) g.appendChild(text(mid.x, mid.y - 5, labelText, { "text-anchor": "middle", "font-size": 11, fill: PAL.edgeText }));
+    if (rel.sourceRole) g.appendChild(text(p1.x + Math.cos(ang) * 18, p1.y + Math.sin(ang) * 18 + 12, rel.sourceRole, { "font-size": 10, fill: PAL.edgeDim, "text-anchor": "middle" }));
+    if (rel.targetRole) g.appendChild(text(p2.x - Math.cos(ang) * 18, p2.y - Math.sin(ang) * 18 + 12, rel.targetRole, { "font-size": 10, fill: PAL.edgeDim, "text-anchor": "middle" }));
+    if (rel.sourceMult) g.appendChild(text(p1.x + Math.cos(ang) * 16, p1.y + Math.sin(ang) * 16 - 4, rel.sourceMult, { "font-size": 11, fill: PAL.edgeDim, "text-anchor": "middle" }));
+    if (rel.targetMult) g.appendChild(text(p2.x - Math.cos(ang) * 16, p2.y - Math.sin(ang) * 16 - 4, rel.targetMult, { "font-size": 11, fill: PAL.edgeDim, "text-anchor": "middle" }));
     return g;
   }
 
@@ -400,28 +411,28 @@
     const c = Math.cos(ang), s = Math.sin(ang), nx = -s, ny = c;
     if (kind === "open") {
       const L = 13, W = 7, bx = p.x - c * L, by = p.y - s * L, g = el2("g", {});
-      g.appendChild(el2("line", { x1: bx + nx * W, y1: by + ny * W, x2: p.x, y2: p.y, stroke: "#9fb0cf", "stroke-width": 1.5 }));
-      g.appendChild(el2("line", { x1: bx - nx * W, y1: by - ny * W, x2: p.x, y2: p.y, stroke: "#9fb0cf", "stroke-width": 1.5 }));
+      g.appendChild(el2("line", { x1: bx + nx * W, y1: by + ny * W, x2: p.x, y2: p.y, stroke: PAL.edge, "stroke-width": 1.5 }));
+      g.appendChild(el2("line", { x1: bx - nx * W, y1: by - ny * W, x2: p.x, y2: p.y, stroke: PAL.edge, "stroke-width": 1.5 }));
       return g;
     }
     if (kind === "triangleHollow" || kind === "triangleFilled") {
       const L = 14, W = 9, bx = p.x - c * L, by = p.y - s * L;
-      return el2("polygon", { points: `${p.x},${p.y} ${bx + nx * W},${by + ny * W} ${bx - nx * W},${by - ny * W}`, fill: kind === "triangleFilled" ? "#9fb0cf" : "#0c111b", stroke: "#9fb0cf", "stroke-width": 1.5 });
+      return el2("polygon", { points: `${p.x},${p.y} ${bx + nx * W},${by + ny * W} ${bx - nx * W},${by - ny * W}`, fill: kind === "triangleFilled" ? PAL.edge : PAL.canvas, stroke: PAL.edge, "stroke-width": 1.5 });
     }
     if (kind === "diamondHollow" || kind === "diamondFilled") {
       const L = 16, W = 7, ex = p.x + c * L, ey = p.y + s * L, mx = p.x + c * (L / 2), my = p.y + s * (L / 2);
-      return el2("polygon", { points: `${p.x},${p.y} ${mx + nx * W},${my + ny * W} ${ex},${ey} ${mx - nx * W},${my - ny * W}`, fill: kind === "diamondFilled" ? "#9fb0cf" : "#0c111b", stroke: "#9fb0cf", "stroke-width": 1.5 });
+      return el2("polygon", { points: `${p.x},${p.y} ${mx + nx * W},${my + ny * W} ${ex},${ey} ${mx - nx * W},${my - ny * W}`, fill: kind === "diamondFilled" ? PAL.edge : PAL.canvas, stroke: PAL.edge, "stroke-width": 1.5 });
     }
     if (kind === "crowsfoot") { // "many" — three prongs fanning onto the entity
       const L = 14, W = 8, bx = p.x - c * L, by = p.y - s * L, g = el2("g", {});
-      g.appendChild(el2("line", { x1: bx, y1: by, x2: p.x, y2: p.y, stroke: "#9fb0cf", "stroke-width": 1.4 }));
-      g.appendChild(el2("line", { x1: bx, y1: by, x2: p.x + nx * W, y2: p.y + ny * W, stroke: "#9fb0cf", "stroke-width": 1.4 }));
-      g.appendChild(el2("line", { x1: bx, y1: by, x2: p.x - nx * W, y2: p.y - ny * W, stroke: "#9fb0cf", "stroke-width": 1.4 }));
+      g.appendChild(el2("line", { x1: bx, y1: by, x2: p.x, y2: p.y, stroke: PAL.edge, "stroke-width": 1.4 }));
+      g.appendChild(el2("line", { x1: bx, y1: by, x2: p.x + nx * W, y2: p.y + ny * W, stroke: PAL.edge, "stroke-width": 1.4 }));
+      g.appendChild(el2("line", { x1: bx, y1: by, x2: p.x - nx * W, y2: p.y - ny * W, stroke: PAL.edge, "stroke-width": 1.4 }));
       return g;
     }
     if (kind === "barone") { // "one" — a single perpendicular tick
       const D = 11, W = 7, mx = p.x - c * D, my = p.y - s * D;
-      return el2("line", { x1: mx + nx * W, y1: my + ny * W, x2: mx - nx * W, y2: my - ny * W, stroke: "#9fb0cf", "stroke-width": 1.6 });
+      return el2("line", { x1: mx + nx * W, y1: my + ny * W, x2: mx - nx * W, y2: my - ny * W, stroke: PAL.edge, "stroke-width": 1.6 });
     }
     return el2("g", {});
   }
@@ -437,6 +448,7 @@
   // ---- main --------------------------------------------------------------
   function render(svg, model, diagram, opts) {
     opts = opts || {};
+    PAL = readPalette();
     clear(svg);
     svg.appendChild(defs());
     const root = el2("g", { class: "viewport" });
