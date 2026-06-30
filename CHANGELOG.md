@@ -3,7 +3,7 @@
 All notable changes to Orrery Systems Modeler are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.1.3] - 2026-06-29
 
 ### Added
 - **Light / dark theme toggle** — a top-bar switch (persisted to the browser,
@@ -67,6 +67,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - Documentation set with embedded PlantUML UML & SysML diagrams, an importable
   self-model XMI, and CI/CodeQL/Dependency-Review/Dependabot pipelines.
 
+[0.1.3]: https://github.com/erautiola/Orrery-Systems-Modeler/releases/tag/v0.1.3
 [0.1.2]: https://github.com/erautiola/Orrery-Systems-Modeler/releases/tag/v0.1.2
 [0.1.1]: https://github.com/erautiola/Orrery-Systems-Modeler/releases/tag/v0.1.1
 [0.1.0]: https://github.com/erautiola/Orrery-Systems-Modeler/releases/tag/v0.1.0
