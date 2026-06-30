@@ -3,6 +3,14 @@
 All notable changes to Orrery Systems Modeler are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- **Undo / redo** — snapshot-based history across all model edits (create, move,
+  resize, connect, delete, property/table/matrix edits, diagram management).
+  Top-bar ↶/↷ buttons and Ctrl+Z / Ctrl+Y / Ctrl+Shift+Z; typing bursts coalesce
+  into one step. Pure history module (`history.js`) with unit tests.
+
 ## [0.1.3] - 2026-06-29
 
 ### Added

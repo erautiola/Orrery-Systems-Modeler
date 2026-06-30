@@ -5,6 +5,14 @@
 `docker compose up -d`, then browse to **http://localhost:8080**. Anyone who can
 reach that host/port shares the same project library.
 
+## Undo / redo
+
+Every edit — creating, moving, resizing, connecting, deleting, property changes,
+table/matrix edits, adding/removing diagrams — can be undone. Use the **↶ / ↷**
+buttons in the top bar or **Ctrl+Z** / **Ctrl+Y** (also **Ctrl+Shift+Z** to redo).
+A burst of typing in a field collapses into a single undo step. History is
+per‑open‑project and resets when you open or create a project.
+
 ## Appearance (light / dark)
 
 Use the **☾ / ☀ button** in the top bar to switch between dark and light themes.
