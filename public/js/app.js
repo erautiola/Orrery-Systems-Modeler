@@ -14,6 +14,8 @@
     table: null,
     dirty: false,
     editor: null,
+    hist: History.createHistory(100),
+    restoring: false,
   };
   const CLASSIFIER_TYPES = ["class", "interface", "enumeration", "datatype", "primitive", "component",
     "block", "valueType", "constraint", "interfaceBlock", "actor", "usecase", "requirement", "instance", "part", "state"];
@@ -28,7 +30,45 @@
 
   // ---------------------------------------------------------------- status
   function status(msg, err) { const s = $("status"); s.textContent = msg; s.classList.toggle("err", !!err); }
-  function markDirty(d) { S.dirty = d; $("dirtyDot").hidden = !d; }
+  function markDirty(d, histKey) {
+    S.dirty = d; $("dirtyDot").hidden = !d;
+    if (d) recordHistory(histKey);
+  }
+
+  // ---------------------------------------------------------------- history
+  function cloneModel() {
+    try { return structuredClone(S.model); }
+    catch (e) { return JSON.parse(JSON.stringify(S.model)); }
+  }
+  function recordHistory(key) {
+    if (!S.model || S.restoring) return;
+    S.hist.push(cloneModel(), key, Date.now());
+    updateHistoryButtons();
+  }
+  function resetHistory() { if (S.model) { S.hist.reset(cloneModel()); } updateHistoryButtons(); }
+  function updateHistoryButtons() {
+    $("undoBtn").disabled = !(S.model && S.hist.canUndo());
+    $("redoBtn").disabled = !(S.model && S.hist.canRedo());
+  }
+  function undo() { const s = S.hist.undo(); if (s) restoreSnapshot(s); }
+  function redo() { const s = S.hist.redo(); if (s) restoreSnapshot(s); }
+  function restoreSnapshot(snap) {
+    S.restoring = true;
+    const diagId = S.diagram && S.diagram.id, tableId = S.table && S.table.id, wasTable = !!S.table;
+    S.model = (function () { try { return structuredClone(snap); } catch (e) { return JSON.parse(JSON.stringify(snap)); } })();
+    S.editor.setModel(S.model);
+    renderDiagramList(); renderTableList(); renderTree();
+    if (wasTable) {
+      const t = S.model.tables.find((x) => x.id === tableId);
+      if (t) selectTable(t); else loadFirstDiagram();
+    } else {
+      const d = S.model.diagrams.find((x) => x.id === diagId) || S.model.diagrams[0];
+      if (d) selectDiagram(d);
+    }
+    S.dirty = true; $("dirtyDot").hidden = false;
+    S.restoring = false;
+    updateHistoryButtons();
+  }
 
   // ============================================================ PROJECTS
   async function refreshConnection() {
@@ -72,6 +112,7 @@
       S.editor.setModel(S.model);
       loadFirstDiagram();
       markDirty(false);
+      resetHistory();
       updateProjectBar();
       $("canvasHint").style.display = "none";
       status(`Opened “${p.name}”.`);
@@ -357,7 +398,7 @@
     if (key === "name") el.name = val;
     else if (key === "stereotypes") el.stereotypes = val.split(",").map((s) => s.trim()).filter(Boolean);
     else if (key.startsWith("tag:")) { el.tags = el.tags || {}; el.tags[key.slice(4)] = val; }
-    markDirty(true); renderTree();
+    markDirty(true, "cell:" + id + ":" + key); renderTree();
   }
   function fillTypeSelect(sel, current) {
     sel.innerHTML = `<option value="all">All classifiers</option>` +
@@ -617,7 +658,11 @@
   }
 
   // ----- property helpers (commit edits) ---------------------------------
-  function touch(reflow) { markDirty(true); if (reflow) S.editor.refresh(); else S.editor.render(); }
+  function touch(reflow) {
+    const sel = S.editor.getSelection();
+    markDirty(true, "prop:" + (sel ? sel.kind + ":" + sel.id : ""));
+    if (reflow) S.editor.refresh(); else S.editor.render();
+  }
   function reselect() { const s = S.editor.getSelection(); renderProps(s); S.editor.render(); if (s) S.editor.reselect(s); }
 
   function textField(label, val, on) {
@@ -746,6 +791,8 @@
   $("saveBtn").addEventListener("click", save);
   $("addDiagramBtn").addEventListener("click", addDiagram);
   $("addTableBtn").addEventListener("click", addTable);
+  $("undoBtn").addEventListener("click", undo);
+  $("redoBtn").addEventListener("click", redo);
   $("importInput").addEventListener("change", (e) => { const f = e.target.files[0]; if (f) importXmiFile(f); e.target.value = ""; });
   $("zoomIn").addEventListener("click", () => S.editor.zoomIn());
   $("zoomOut").addEventListener("click", () => S.editor.zoomOut());
@@ -757,7 +804,11 @@
   expMenu.addEventListener("click", (e) => { const a = e.target.dataset.act; if (a) { exportAs(a); expMenu.hidden = true; } });
 
   document.addEventListener("keydown", (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") { e.preventDefault(); save(); }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") { e.preventDefault(); save(); return; }
+    // let native text undo/redo work while editing a form field
+    if (e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === "z") { e.preventDefault(); undo(); }
+    else if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === "y" || (e.shiftKey && e.key.toLowerCase() === "z"))) { e.preventDefault(); redo(); }
   });
   window.addEventListener("beforeunload", (e) => { if (S.dirty) { e.preventDefault(); e.returnValue = ""; } });
 

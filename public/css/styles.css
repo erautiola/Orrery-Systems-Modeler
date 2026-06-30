@@ -32,6 +32,7 @@ button, input, select, textarea { font-family: inherit; }
 .dirty { color: var(--warn); font-size: 16px; }
 .rev { font-size: 11px; color: var(--muted); }
 .actions { display: flex; align-items: center; gap: 7px; margin-left: auto; }
+.actions .sep { width: 1px; height: 22px; background: var(--border); margin: 0 2px; }
 
 .btn { background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 7px 12px; cursor: pointer; font-size: 13px; transition: background .12s, border-color .12s; user-select: none; }
 .btn:hover { background: var(--panel-2); border-color: var(--accent); }

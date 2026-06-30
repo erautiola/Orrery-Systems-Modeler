@@ -26,6 +26,9 @@
     </div>
 
     <div class="actions">
+      <button class="btn" id="undoBtn" title="Undo (Ctrl+Z)" aria-label="Undo" disabled>↶</button>
+      <button class="btn" id="redoBtn" title="Redo (Ctrl+Y)" aria-label="Redo" disabled>↷</button>
+      <span class="sep"></span>
       <button class="btn" id="openBtn">Open…</button>
       <button class="btn" id="newBtn">New</button>
       <label class="btn">
@@ -105,6 +108,7 @@
   <div id="modalRoot" class="modal-root" hidden></div>
 
   <script src="js/theme.js"></script>
+  <script src="js/history.js"></script>
   <script src="js/model.js"></script>
   <script src="js/xmi-parser.js"></script>
   <script src="js/xmi-import.js"></script>
