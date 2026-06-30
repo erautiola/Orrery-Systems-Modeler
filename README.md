@@ -148,8 +148,11 @@ API documentation (with rendered diagrams).
 
 Every push / PR to `main` runs (see [`.github/workflows`](.github/workflows)):
 
-- **CI** — installs deps (`npm ci`), syntax-checks all JS, runs `npm audit`, and
-  builds the Docker image + a `/api/health` smoke test.
+- **CI** — installs deps (`npm ci`), syntax-checks all JS, runs `npm audit`, runs
+  the unit + integration tests (also re-run inside the built image), and builds
+  the Docker image + a `/api/health` smoke test.
+- **Feature checklist (tests + docs)** — fails any PR that changes feature code
+  without updating both tests and docs (see [CONTRIBUTING.md](CONTRIBUTING.md)).
 - **CodeQL** — static security/quality analysis for JavaScript (also weekly).
 - **Dependency Review** — flags vulnerable dependency changes on PRs.
 - **Dependabot** — weekly update PRs for npm, GitHub Actions, and Docker.

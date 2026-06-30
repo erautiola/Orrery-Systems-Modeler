@@ -11,6 +11,10 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   **control flow** (with `[guard]`) and **object flow** connectors.
 - **Parametric diagrams (SysML)** — constraint properties (`{expression}` +
   parameters) and value properties (type/value), joined by **binding connectors**.
+- **Contribution policy + enforced gate** — `CONTRIBUTING.md` and a PR template
+  require tests **and** docs for every feature; a new CI check **“Feature
+  checklist (tests + docs)”** fails any PR that changes source without updating
+  both (bypass via the `skip-feature-gate` label; Dependabot exempt).
 
 ## [0.1.2] - 2026-06-29
 

@@ -30,6 +30,43 @@ jobs:
         working-directory: server
         run: npm audit --omit=dev --audit-level=high
 
+  feature-gate:
+    name: Feature checklist (tests + docs)
+    # Policy: every PR that changes feature/source code must also update or add
+    # tests (server/test/**) AND documentation (docs/**, README.md, CHANGELOG.md).
+    # Bypass for non-feature PRs with the "skip-feature-gate" label.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Require tests + docs for feature changes
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+          ACTOR: ${{ github.actor }}
+          LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+        run: |
+          if [ "$ACTOR" = "dependabot[bot]" ]; then echo "Dependabot PR — gate skipped."; exit 0; fi
+          case ",$LABELS," in *,skip-feature-gate,*) echo "'skip-feature-gate' label present — gate skipped."; exit 0 ;; esac
+          files=$(git diff --name-only "$BASE" "$HEAD")
+          echo "Changed files:"; echo "$files"
+          src=$(echo "$files" | grep -E '^(public/js/.*\.js|server/[^/]+\.js)$' | grep -v '^server/test/' || true)
+          if [ -z "$src" ]; then echo "No feature/source changes detected — gate passes."; exit 0; fi
+          tests=$(echo "$files" | grep -E '^server/test/' || true)
+          docs=$(echo "$files" | grep -E '^(docs/|README\.md|CHANGELOG\.md)' || true)
+          missing=""
+          [ -z "$tests" ] && missing="$missing tests(server/test/**)"
+          [ -z "$docs" ]  && missing="$missing docs(docs/**|README.md|CHANGELOG.md)"
+          if [ -n "$missing" ]; then
+            echo "::error::Feature/source changes detected but the PR is missing:$missing"
+            echo "Per policy, add/refresh unit+integration tests AND documentation for each feature before merge."
+            echo "For genuinely non-feature changes, add the 'skip-feature-gate' label."
+            exit 1
+          fi
+          echo "Feature change includes tests and docs — gate passes."
+
   test:
     name: Unit & integration tests
     runs-on: ubuntu-latest
