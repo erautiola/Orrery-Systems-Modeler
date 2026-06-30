@@ -766,5 +766,23 @@
   wrap.addEventListener("dragover", (e) => e.preventDefault());
   wrap.addEventListener("drop", (e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) importXmiFile(f); });
 
+  // ---------------------------------------------------------------- theme
+  function applyTheme(t) {
+    document.documentElement.dataset.theme = t;
+    const b = $("themeBtn");
+    if (b) { b.textContent = t === "light" ? "☀" : "☾"; b.title = "Switch to " + (t === "light" ? "dark" : "light") + " theme"; }
+  }
+  function initTheme() {
+    const prefersLight = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches;
+    applyTheme(Theme.resolveInitial(localStorage.getItem(Theme.KEY), prefersLight));
+  }
+  $("themeBtn").addEventListener("click", () => {
+    const t = Theme.nextTheme(document.documentElement.dataset.theme || "dark");
+    applyTheme(t);
+    try { localStorage.setItem(Theme.KEY, t); } catch (e) { /* ignore */ }
+    if (S.editor && S.diagram) S.editor.render(); // refresh SVG colors for the new theme
+  });
+  initTheme();
+
   refreshConnection();
 })();

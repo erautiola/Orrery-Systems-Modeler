@@ -1,8 +1,19 @@
-:root {
+:root, :root[data-theme="dark"] {
   --bg: #0f1420; --bg-2: #161d2e; --panel: #1b2334; --panel-2: #212b40;
   --border: #2c374f; --text: #e6ecf5; --muted: #8a97b0;
   --accent: #5b9bff; --accent-2: #7c5cff; --good: #34d399; --warn: #f59e0b; --bad: #f87171;
-  --canvas: #0c111b;
+  --canvas: #0c111b; --grid: #182033;
+  /* diagram (SVG) colors read by the renderer */
+  --edge: #9fb0cf; --edge-text: #e6ecf5; --edge-text-dim: #c6d2e8;
+  --node-fill: #f7f9fc; --node-stroke: #3a4a6b;
+}
+:root[data-theme="light"] {
+  --bg: #eef1f6; --bg-2: #e6ebf3; --panel: #dfe5f0; --panel-2: #d4dce9;
+  --border: #c3cddc; --text: #1a2236; --muted: #5a6577;
+  --accent: #2f6fe0; --accent-2: #6b4ee0; --good: #1f9d7a; --warn: #b9770b; --bad: #d2453f;
+  --canvas: #f4f7fc; --grid: #e2e8f2;
+  --edge: #5c6b86; --edge-text: #2a3447; --edge-text-dim: #4a5468;
+  --node-fill: #ffffff; --node-stroke: #8290aa;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; font-family: "Segoe UI", Roboto, system-ui, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
@@ -137,7 +148,7 @@ table.grid td.cellmark .mk { color: var(--accent); font-weight: 700; }
 
 /* SVG nodes */
 .uml-node { cursor: move; }
-.uml-node .node-bg { fill: #f7f9fc; stroke: #3a4a6b; stroke-width: 1.2; }
+.uml-node .node-bg { fill: var(--node-fill); stroke: var(--node-stroke); stroke-width: 1.2; }
 .uml-node.selected .node-bg { stroke: var(--accent); stroke-width: 2.4; }
 .edge { cursor: pointer; }
 .handle { cursor: nwse-resize; }

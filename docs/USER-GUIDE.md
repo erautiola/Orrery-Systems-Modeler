@@ -5,6 +5,12 @@
 `docker compose up -d`, then browse to **http://localhost:8080**. Anyone who can
 reach that host/port shares the same project library.
 
+## Appearance (light / dark)
+
+Use the **☾ / ☀ button** in the top bar to switch between dark and light themes.
+Your choice is remembered in the browser; first‑time visitors default to your OS
+preference. Diagrams (including exported SVG colors on screen) follow the theme.
+
 ## Projects (shared library)
 
 - **Open** — browse and open any project on the server.
