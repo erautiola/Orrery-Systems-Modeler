@@ -55,6 +55,25 @@ Place a **Constraint** (set its `{expression}` and list its **parameters** in
 Properties) and **Value Property** elements (type + value). Use the **Binding
 Connector** to tie value properties to the constraint's parameters.
 
+![Parametric example](https://www.plantuml.com/plantuml/proxy?cache=no&fmt=svg&src=https://raw.githubusercontent.com/erautiola/Orrery-Systems-Modeler/main/docs/diagrams/parametric.puml)
+
+<details><summary>PlantUML source</summary>
+
+```plantuml
+@startuml parametric
+title Parametric — F = m*a (constraint bound to value properties)
+skinparam shadowing false
+rectangle "force : N" as F
+rectangle "mass : kg" as M
+rectangle "accel : m/s^2" as A
+rectangle "«constraint»\nForceEq\n{F = m*a}" as C #F0E6FF
+F -- C
+M -- C
+A -- C
+@enduml
+```
+</details>
+
 ## Tables & matrices
 
 Add with the **＋** beside *Tables & Matrices*:

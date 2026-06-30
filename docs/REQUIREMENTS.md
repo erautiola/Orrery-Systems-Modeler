@@ -62,5 +62,6 @@ Tables ..> R4 : <<satisfy>>
 | R-2 | Create and edit UML & SysML diagrams | Frontend (editor + renderers) | ✅ done |
 | R-3 | Import and export OMG XMI | XmiIO | ✅ done |
 | R-4 | Element/requirement tables and dependency matrices | Tables | ✅ done |
-| R-5 | Database/ER tables + SQL generation | — | ⏳ planned |
-| R-6 | Activity & Parametric diagrams | — | ⏳ planned |
+| R-5 | Database/ER tables + SQL generation | Frontend (ER renderer + SQL export) | ✅ done |
+| R-6 | Activity & Parametric diagrams | Frontend (renderers + editor) | ✅ done |
+| R-7 | Timing & Communication diagrams | — | ⏳ planned |
