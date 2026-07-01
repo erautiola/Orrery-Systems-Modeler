@@ -377,6 +377,35 @@
     }
   }
 
+  // ---- ports (SysML IBD) -------------------------------------------------
+  function drawPort(el, cx, cy, edge) {
+    const g = el2("g", { class: "uml-node", "data-id": el.id, transform: `translate(${cx},${cy})` });
+    g.appendChild(el2("rect", { class: "node-bg", x: -8, y: -8, width: 16, height: 16, fill: "#e8f0ff", stroke: "#3a4a6b", "stroke-width": 1.3 }));
+    const nrm = ({ right: [1, 0], left: [-1, 0], top: [0, -1], bottom: [0, 1] })[edge] || [1, 0];
+    if (el.direction === "in" || el.direction === "out") { // flow-direction triangle
+      const sgn = el.direction === "out" ? 1 : -1, ux = nrm[0] * sgn, uy = nrm[1] * sgn, px = -uy, py = ux;
+      const pts = `${ux * 7},${uy * 7} ${-ux + px * 4},${-uy + py * 4} ${-ux - px * 4},${-uy - py * 4}`;
+      g.appendChild(el2("polygon", { points: pts, fill: PAL.edge, stroke: PAL.edge }));
+    }
+    const lbl = Model.portLabel(el);
+    if (lbl) {
+      let tx = 0, ty = 4, anchor = "middle";
+      if (edge === "right") { tx = 12; anchor = "start"; }
+      else if (edge === "left") { tx = -12; anchor = "end"; }
+      else if (edge === "top") { ty = -12; }
+      else { ty = 20; }
+      g.appendChild(text(tx, ty, lbl, { "text-anchor": anchor, "font-size": 11, fill: PAL.edgeText }));
+    }
+    return g;
+  }
+  function snapPort(o, px, py) {
+    const cx = o.x + o.w / 2, cy = o.y + o.h / 2, dx = px - cx, dy = py - cy;
+    const rx = (o.w / 2) || 1, ry = (o.h / 2) || 1;
+    if (Math.abs(dx) / rx >= Math.abs(dy) / ry)
+      return { x: cx + (dx >= 0 ? rx : -rx), y: Math.max(o.y + 8, Math.min(o.y + o.h - 8, py)), edge: dx >= 0 ? "right" : "left" };
+    return { x: Math.max(o.x + 8, Math.min(o.x + o.w - 8, px)), y: cy + (dy >= 0 ? ry : -ry), edge: dy >= 0 ? "bottom" : "top" };
+  }
+
   // ---- edges -------------------------------------------------------------
   function drawEdge(rel, absById) {
     const s = absById.get(rel.sourceId), t = absById.get(rel.targetId);
@@ -387,6 +416,7 @@
     const labelText = rel.type === "transition" ? Model.transitionLabel(rel)
       : rel.type === "controlflow" ? (rel.guard ? "[" + rel.guard + "]" : (rel.name || ""))
       : rel.type === "commMsg" ? Model.commLabel(rel)
+      : rel.type === "itemflow" ? (Model.flowLabel(rel) ? "«flow» " + Model.flowLabel(rel) : "«flow»")
       : (rel.name || rel.label || (spec.keyword ? "«" + spec.keyword + "»" : ""));
 
     if (rel.sourceId === rel.targetId) { // self-transition loop
@@ -407,6 +437,7 @@
     if (spec.targetEnd && spec.targetEnd !== "none") g.appendChild(marker(spec.targetEnd, p2, ang));
     if (spec.sourceEnd && spec.sourceEnd !== "none") g.appendChild(marker(spec.sourceEnd, p1, ang + Math.PI));
     const mid = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+    if (rel.type === "itemflow") g.appendChild(marker("triangleFilled", { x: mid.x, y: mid.y }, ang)); // flow direction
     if (labelText) g.appendChild(text(mid.x, mid.y - 5, labelText, { "text-anchor": "middle", "font-size": 11, fill: PAL.edgeText }));
     if (rel.sourceRole) g.appendChild(text(p1.x + Math.cos(ang) * 18, p1.y + Math.sin(ang) * 18 + 12, rel.sourceRole, { "font-size": 10, fill: PAL.edgeDim, "text-anchor": "middle" }));
     if (rel.targetRole) g.appendChild(text(p2.x - Math.cos(ang) * 18, p2.y - Math.sin(ang) * 18 + 12, rel.targetRole, { "font-size": 10, fill: PAL.edgeDim, "text-anchor": "middle" }));
@@ -472,15 +503,20 @@
       const el = Model.elementById(model, n.elementId);
       if (el) entryById.set(el.id, { el, node: n });
     }
+    // ports are drawn in their own pass (snapped to their owner's border), so
+    // they are excluded from the generic containment graph.
+    const ports = [...entryById.values()].filter((e) => e.el.type === "port");
     const kids = new Map();
     for (const e of entryById.values()) {
+      if (e.el.type === "port") continue;
       const owner = e.el.ownerId;
       if (owner && entryById.has(owner)) {
         if (!kids.has(owner)) kids.set(owner, []);
         kids.get(owner).push(e);
       }
     }
-    const roots = [...entryById.values()].filter((e) => !(e.el.ownerId && entryById.has(e.el.ownerId)));
+    const roots = [...entryById.values()].filter((e) =>
+      e.el.type !== "port" && !(e.el.ownerId && entryById.has(e.el.ownerId)));
 
     // measure (post-order): leaves from content, containers grow to fit kids
     function measure(e) {
@@ -532,6 +568,17 @@
       }
     }
     roots.forEach((e) => draw(e, 0, 0, nodeLayer));
+
+    // ports: snap to owner border (owner abs is known now), else free-floating
+    for (const e of ports) {
+      const sz = computeSize(e.el); e.node.w = sz.w; e.node.h = sz.h;
+      const owner = e.el.ownerId && absById.get(e.el.ownerId);
+      let cx, cy, edge;
+      if (owner) { const sp = snapPort(owner, e.node.x + sz.w / 2, e.node.y + sz.h / 2); cx = sp.x; cy = sp.y; edge = sp.edge; }
+      else { cx = e.node.x + sz.w / 2; cy = e.node.y + sz.h / 2; edge = "right"; }
+      nodeLayer.appendChild(drawPort(e.el, cx, cy, edge));
+      absById.set(e.el.id, { x: cx - sz.w / 2, y: cy - sz.h / 2, w: sz.w, h: sz.h });
+    }
 
     // edges (absolute)
     const hidden = new Set(diagram.hidden || []);

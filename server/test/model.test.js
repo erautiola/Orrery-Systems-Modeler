@@ -79,6 +79,19 @@ test("Timing diagram type + timeline element with states/changes", () => {
   assert.equal(typeof t.tMax, "number");
 });
 
+test("IBD: port fields, item-flow fields, and labels", () => {
+  const port = Model.newElement("port", "p1");
+  assert.equal(port.direction, "inout");
+  assert.equal(port.flowType, "");
+  assert.equal(port.isConjugated, false);
+  assert.equal(Model.portLabel({ name: "p1", flowType: "Signal", isConjugated: true }), "~p1 : Signal");
+  assert.equal(Model.portLabel({ name: "p2" }), "p2");
+  const f = Model.newRelationship("itemflow", "a", "b");
+  assert.equal(f.itemName, "");
+  assert.equal(f.itemType, "");
+  assert.equal(Model.flowLabel({ itemName: "data", itemType: "Packet" }), "data : Packet");
+});
+
 test("Communication diagram type + object/message exist", () => {
   assert.ok(Model.DIAGRAMS.communication, "communication diagram type");
   assert.ok(Model.DIAGRAMS.communication.elements.includes("comObject"));

@@ -74,6 +74,14 @@ Place **Action**, **Decision/Merge**, **Fork/Join**, **Initial**, **Final**,
 Flow** (add a `[guard]` in Properties) or **Object Flow**. Drop a **Partition**
 (swimlane) and drag actions into it to assign them to that lane.
 
+### Internal Block (IBD) — ports & item flows
+Place **Part** elements. Drop a **Port** onto a part — it **snaps to the part's
+border**. In the port's Properties set its **direction** (in / out / inout, shown
+as a small triangle), **flow type**, whether it's **conjugated** (`~`), or reassign
+it via **On part**. Connect ports with a **Connector**, or an **Item Flow** and set
+its **item name / type** — the flow renders as `«flow» item : Type` with a
+directional arrow.
+
 ### Parametric (SysML)
 Place a **Constraint** (set its `{expression}` and list its **parameters** in
 Properties) and **Value Property** elements (type + value). Use the **Binding

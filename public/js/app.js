@@ -497,6 +497,15 @@
     }
     if (el.type === "dbtable") columnSection(p, el);
     if (el.type === "timeline") timelineSection(p, el);
+    if (el.type === "port") {
+      const dopts = ["in", "out", "inout"].map((x) => `<option value="${x}"${el.direction === x ? " selected" : ""}>${x}</option>`).join("");
+      p.appendChild(selectField("Direction", dopts, (v) => { el.direction = v; touch(true); }));
+      p.appendChild(textField("Flow type", el.flowType || "", (v) => { el.flowType = v; touch(true); }));
+      p.appendChild(checkField("Conjugated (~)", el.isConjugated, (v) => { el.isConjugated = v; touch(true); }));
+      const parts = S.model.elements.filter((e) => e.type === "part");
+      const popts = `<option value="">(free — not on a part)</option>` + parts.map((pt) => `<option value="${pt.id}"${el.ownerId === pt.id ? " selected" : ""}>${esc(pt.name)}</option>`).join("");
+      p.appendChild(selectField("On part", popts, (v) => { el.ownerId = v || null; touch(true); }));
+    }
     if (el.type === "constraintProp") {
       p.appendChild(textField("Constraint expression { }", el.expression || "", (v) => { el.expression = v; touch(true); }));
       featureSection(p, "Parameters", el.parameters, () => "p", paramRow, () => el.parameters.push("p"));
@@ -664,6 +673,12 @@
       p.appendChild(textField(`FK column (in ${src ? src.name : "child"})`, r.fkColumn || "", (v) => { r.fkColumn = v; touch(true); }));
       p.appendChild(textField(`References column (in ${tgt ? tgt.name : "parent"})`, r.refColumn || "", (v) => { r.refColumn = v; touch(false); }));
       p.appendChild(deleteBtn("Delete foreign key", () => S.editor.deleteSelection()));
+      return;
+    }
+    if (r.type === "itemflow") {
+      p.appendChild(textField("Item name", r.itemName || "", (v) => { r.itemName = v; touch(true); }));
+      p.appendChild(textField("Item type", r.itemType || "", (v) => { r.itemType = v; touch(true); }));
+      p.appendChild(deleteBtn("Delete item flow", () => S.editor.deleteSelection()));
       return;
     }
     if (r.type === "commMsg") {
