@@ -33,7 +33,7 @@ preference. Diagrams (including exported SVG colors on screen) follow the theme.
 
 Add with the **＋** beside *Diagrams*. Types: Class, Package, Component,
 SysML **BDD**, SysML **IBD**, **Requirement**, **Use Case**, **State Machine**,
-**Sequence**, **ER / Data Model**, **Activity**, **Parametric**.
+**Sequence**, **ER / Data Model**, **Activity**, **Parametric**, **Communication**.
 
 - Pick an **element tool** in the palette, then click the canvas to place it.
 - Pick a **relationship tool**, then **drag from source to target**.
@@ -68,6 +68,11 @@ Flow** (add a `[guard]` in Properties) or **Object Flow**. Drop a **Partition**
 Place a **Constraint** (set its `{expression}` and list its **parameters** in
 Properties) and **Value Property** elements (type + value). Use the **Binding
 Connector** to tie value properties to the constraint's parameters.
+
+### Communication
+Place **Object** elements (`role:Class`, drawn underlined) and connect them with
+the **Message** tool — a directed arrow. In Properties set the **sequence #**
+(e.g. `1`, `1.1`) and the **message** text; the label renders as `1: doIt()`.
 
 ![Parametric example](https://www.plantuml.com/plantuml/proxy?cache=no&fmt=svg&src=https://raw.githubusercontent.com/erautiola/Orrery-Systems-Modeler/main/docs/diagrams/parametric.puml)
 

@@ -99,6 +99,7 @@
     }
     if (spec.shape === "action") return { w: Math.max(100, tw(el.name, F_NAME) + 32), h: 44 };
     if (spec.shape === "objectnode") return { w: Math.max(90, tw(el.name, F_NAME) + 24), h: 38 };
+    if (spec.shape === "object") return { w: Math.max(100, tw(el.name, F_NAME) + 28), h: 40 };
     if (spec.shape === "partition") return { w: 200, h: 240 }; // base; grows to fit children
     if (spec.shape === "valueprop") {
       const t = el.name + (el.valueType ? " : " + el.valueType : "") + (el.value ? " = " + el.value : "");
@@ -178,6 +179,7 @@
       case "dbtable": drawDbTable(g, el, node); break;
       case "action": drawAction(g, el, W, H); break;
       case "objectnode": drawObjectNode(g, el, W, H); break;
+      case "object": drawObject(g, el, W, H); break;
       case "constraintprop": drawConstraintProp(g, el, node); break;
       case "valueprop": drawValueProp(g, el, W, H); break;
       case "partition": drawPartition(g, el, node); break;
@@ -301,6 +303,11 @@
     g.appendChild(el2("rect", { class: "node-bg", width: W, height: H, fill: "#fff", stroke: "#3a4a6b", "stroke-width": 1.3 }));
     g.appendChild(text(W / 2, H / 2 + 4, el.name, { "text-anchor": "middle", "font-weight": 600, "font-size": 12, fill: "#1a2236" }));
   }
+  function drawObject(g, el, W, H) {
+    const ac = accent(el);
+    g.appendChild(el2("rect", { class: "node-bg", width: W, height: H, rx: 3, fill: "#eef4ff", stroke: ac.bar, "stroke-width": 1.3 }));
+    g.appendChild(text(W / 2, H / 2 + 4, el.name, { "text-anchor": "middle", "font-weight": 600, "font-size": 13, "text-decoration": "underline", fill: "#1a2236" }));
+  }
   function drawPartition(g, el, node) {
     const W = node.w, H = node.h;
     g.appendChild(el2("rect", { class: "node-bg", width: W, height: H, fill: "rgba(91,155,255,0.04)", stroke: "#5b9bff", "stroke-width": 1.2 }));
@@ -379,6 +386,7 @@
     const dashed = spec.line === "dashed";
     const labelText = rel.type === "transition" ? Model.transitionLabel(rel)
       : rel.type === "controlflow" ? (rel.guard ? "[" + rel.guard + "]" : (rel.name || ""))
+      : rel.type === "commMsg" ? Model.commLabel(rel)
       : (rel.name || rel.label || (spec.keyword ? "«" + spec.keyword + "»" : ""));
 
     if (rel.sourceId === rel.targetId) { // self-transition loop
