@@ -637,6 +637,14 @@
       p.appendChild(deleteBtn("Delete foreign key", () => S.editor.deleteSelection()));
       return;
     }
+    if (r.type === "commMsg") {
+      const r2 = h(`<div class="row2"></div>`);
+      r2.appendChild(textField("Sequence #", r.seq || "", (v) => { r.seq = v; touch(true); }));
+      p.appendChild(r2);
+      p.appendChild(textField("Message", r.name || "", (v) => { r.name = v; touch(true); }));
+      p.appendChild(deleteBtn("Delete message", () => S.editor.deleteSelection()));
+      return;
+    }
     if (r.type === "transition") {
       p.appendChild(textField("Trigger (event)", r.trigger || "", (v) => { r.trigger = v; touch(true); }));
       p.appendChild(textField("Guard [condition]", r.guard || "", (v) => { r.guard = v; touch(true); }));
@@ -768,7 +776,7 @@
       initial: "●", final: "◉", choice: "◇", composite: "▣", forkjoin: "▬", junction: "•", history: "Ⓗ",
       part: "▦", port: "▪", note: "🗒", instance: "▤", lifeline: "▯", dbtable: "▤",
       action: "▭", objectNode: "▭", decision: "◇", flowfinal: "⊗", partition: "▥",
-      constraintProp: "∑", valueProp: "▭",
+      constraintProp: "∑", valueProp: "▭", comObject: "▭",
     })[type] || "▣";
   }
   function download(content, name, mime) {

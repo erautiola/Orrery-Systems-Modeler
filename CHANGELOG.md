@@ -6,6 +6,8 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- **Communication diagrams** — objects (`role:Class`, underlined) linked by
+  **sequence-numbered directed messages** (`1: doIt()`).
 - **Undo / redo** — snapshot-based history across all model edits (create, move,
   resize, connect, delete, property/table/matrix edits, diagram management).
   Top-bar ↶/↷ buttons and Ctrl+Z / Ctrl+Y / Ctrl+Shift+Z; typing bursts coalesce

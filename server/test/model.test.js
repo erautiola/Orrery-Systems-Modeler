@@ -70,9 +70,19 @@ test("Parametric diagram type + constraint/value props exist", () => {
   assert.ok(Model.RELATIONSHIPS.binding);
 });
 
+test("Communication diagram type + object/message exist", () => {
+  assert.ok(Model.DIAGRAMS.communication, "communication diagram type");
+  assert.ok(Model.DIAGRAMS.communication.elements.includes("comObject"));
+  assert.ok(Model.DIAGRAMS.communication.relationships.includes("commMsg"));
+  assert.equal(Model.newRelationship("commMsg").seq, "");
+  assert.ok(Model.ELEMENTS.comObject);
+});
+
 test("label helpers format correctly", () => {
   assert.equal(Model.transitionLabel({ trigger: "t", guard: "g", effect: "e" }), "t [g] / e");
   assert.equal(Model.messageLabel({ type: "msgSync", name: "op", args: "a", returnValue: "r" }), "r = op(a)");
+  assert.equal(Model.commLabel({ seq: "1", name: "authenticate()" }), "1: authenticate()");
+  assert.equal(Model.commLabel({ name: "ping()" }), "ping()");
 });
 
 test("removeElement also drops its relationships and diagram nodes", () => {

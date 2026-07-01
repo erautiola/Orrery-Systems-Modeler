@@ -60,8 +60,9 @@
     decision:     { label: "Decision / Merge", shape: "choice",  compartments: [], fixedSize: [40, 30] },
     flowfinal:    { label: "Flow Final",    shape: "flowfinal",  compartments: [], fixedSize: [26, 26] },
     partition:    { label: "Partition",     shape: "partition",  compartments: [], container: true },
-    // --- interaction (sequence) ---
+    // --- interaction (sequence / communication) ---
     lifeline:     { label: "Lifeline",      shape: "lifeline",   compartments: [] },
+    comObject:    { label: "Object",        shape: "object",     compartments: [], underline: true },
     // --- data modeling (ER) ---
     dbtable:      { label: "DB Table",      shape: "dbtable",    compartments: [], stereotype: "table" },
     // --- SysML parametric ---
@@ -103,6 +104,8 @@
     objectflow:    { label: "Object Flow",  line: "dashed", targetEnd: "open" },
     // --- parametric ---
     binding:       { label: "Binding Connector", line: "solid", targetEnd: "none" },
+    // --- communication: a sequence-numbered directed message along a link ---
+    commMsg:       { label: "Message",      line: "solid", targetEnd: "open" },
   };
 
   // ---- diagram type catalog (palettes) ----------------------------------
@@ -166,6 +169,11 @@
       label: "Parametric Diagram", abbr: "par",
       elements: ["constraintProp", "valueProp", "note"],
       relationships: ["binding", "anchor"],
+    },
+    communication: {
+      label: "Communication Diagram", abbr: "com",
+      elements: ["comObject", "actor", "note"],
+      relationships: ["commMsg", "anchor"],
     },
   };
 
@@ -235,6 +243,7 @@
     if (RELATIONSHIPS[type] && RELATIONSHIPS[type].msg) { r.y = 0; r.args = ""; r.returnValue = ""; }
     if (type === "fk") { r.fkColumn = ""; r.refColumn = ""; }
     if (type === "controlflow") { r.guard = ""; }
+    if (type === "commMsg") { r.seq = ""; }
     return r;
   }
   // UML transition label: "trigger [guard] / effect"
@@ -243,6 +252,11 @@
     if (r.guard) s += " [" + r.guard + "]";
     if (r.effect) s += " / " + r.effect;
     return s.trim() || r.name || "";
+  }
+  // communication message label: "seq: name"
+  function commLabel(r) {
+    const s = (r.seq ? r.seq + ": " : "") + (r.name || "");
+    return s.trim();
   }
   // sequence message label: "ret = name(args)"
   function messageLabel(r) {
@@ -280,7 +294,7 @@
   const api = {
     uid, ELEMENTS, RELATIONSHIPS, DIAGRAMS, VISIBILITIES, TABLES,
     newModel, newElement, newAttribute, newOperation, newRelationship, newDiagram, newTable, newColumn,
-    elementById, relsTouching, removeElement, removeRelationship, stereoText, transitionLabel, messageLabel,
+    elementById, relsTouching, removeElement, removeRelationship, stereoText, transitionLabel, messageLabel, commLabel,
   };
   if (typeof module !== "undefined" && module.exports) module.exports = api; // Node (tests)
   if (root) root.Model = api;                                                // browser
