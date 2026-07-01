@@ -6,6 +6,9 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- **Timing diagrams** — timelines with state lanes and a step function over a
+  time axis (editable states, time length, and state changes). Completes OMG
+  diagram coverage.
 - **Communication diagrams** — objects (`role:Class`, underlined) linked by
   **sequence-numbered directed messages** (`1: doIt()`).
 - **Undo / redo** — snapshot-based history across all model edits (create, move,

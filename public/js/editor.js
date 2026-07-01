@@ -20,8 +20,9 @@
 
     // -------------------------------------------------- rendering
     function isSeq() { return state.diagram && state.diagram.type === "sequence"; }
+    function isTiming() { return state.diagram && state.diagram.type === "timing"; }
     function render() {
-      const R = isSeq() ? SeqRenderer : Renderer;
+      const R = isSeq() ? SeqRenderer : (isTiming() ? TimeRenderer : Renderer);
       state.layers = R.render(svg, state.model, state.diagram, { selection: state.selection });
       applyView();
     }
@@ -63,6 +64,7 @@
       }
       if (nodeG) {
         const id = nodeG.getAttribute("data-id");
+        if (isTiming()) { select({ kind: "element", id }); e.preventDefault(); return; } // bands don't move
         if (state.tool.mode === "rel") {
           state.drag = { type: "link", sourceId: id, cur: w, msgY: w.y };
           drawTempLink(id, w);

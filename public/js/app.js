@@ -496,6 +496,7 @@
       p.appendChild(textField("Represents (classifier)", el.represents || "", (v) => { el.represents = v; touch(true); }));
     }
     if (el.type === "dbtable") columnSection(p, el);
+    if (el.type === "timeline") timelineSection(p, el);
     if (el.type === "constraintProp") {
       p.appendChild(textField("Constraint expression { }", el.expression || "", (v) => { el.expression = v; touch(true); }));
       featureSection(p, "Parameters", el.parameters, () => "p", paramRow, () => el.parameters.push("p"));
@@ -583,6 +584,34 @@
       sec.appendChild(row2);
     });
     p.appendChild(sec);
+  }
+  function timelineSection(p, el) {
+    p.appendChild(numField("Time length", el.tMax || 10, (v) => { el.tMax = Math.max(1, v | 0); touch(true); }));
+    // states
+    const ss = h(`<div class="prop-section"><h4>States <button class="mini" title="Add">＋</button></h4></div>`);
+    ss.querySelector(".mini").addEventListener("click", () => { el.states.push("state"); touch(true); reselect(); });
+    el.states.forEach((s, i) => {
+      const row = document.createElement("div"); row.className = "feat-row";
+      row.appendChild(inp("nm", s, "state", (v) => { el.states[i] = v; touch(true); }));
+      row.appendChild(delBtn(() => { el.states.splice(i, 1); touch(true); reselect(); }));
+      ss.appendChild(row);
+    });
+    p.appendChild(ss);
+    // state changes (at -> state)
+    const cs = h(`<div class="prop-section"><h4>State changes <button class="mini" title="Add">＋</button></h4></div>`);
+    cs.querySelector(".mini").addEventListener("click", () => { el.changes.push({ at: 0, state: el.states[0] || "" }); touch(true); reselect(); });
+    el.changes.forEach((c, i) => {
+      const row = document.createElement("div"); row.className = "feat-row";
+      const at = document.createElement("input"); at.className = "ty"; at.value = c.at; at.placeholder = "at";
+      at.addEventListener("input", () => { const n = parseFloat(at.value); if (!isNaN(n)) { c.at = n; touch(true); } });
+      const sel = document.createElement("select"); sel.className = "nm";
+      el.states.forEach((st) => { const o = document.createElement("option"); o.value = st; o.textContent = st; if (st === c.state) o.selected = true; sel.appendChild(o); });
+      sel.addEventListener("change", () => { c.state = sel.value; touch(true); });
+      row.appendChild(at); row.appendChild(sel);
+      row.appendChild(delBtn(() => { el.changes.splice(i, 1); touch(true); reselect(); }));
+      cs.appendChild(row);
+    });
+    p.appendChild(cs);
   }
   function miniCheck(label, val, on) {
     const w = document.createElement("label");
@@ -776,7 +805,7 @@
       initial: "●", final: "◉", choice: "◇", composite: "▣", forkjoin: "▬", junction: "•", history: "Ⓗ",
       part: "▦", port: "▪", note: "🗒", instance: "▤", lifeline: "▯", dbtable: "▤",
       action: "▭", objectNode: "▭", decision: "◇", flowfinal: "⊗", partition: "▥",
-      constraintProp: "∑", valueProp: "▭", comObject: "▭",
+      constraintProp: "∑", valueProp: "▭", comObject: "▭", timeline: "⏱",
     })[type] || "▣";
   }
   function download(content, name, mime) {
