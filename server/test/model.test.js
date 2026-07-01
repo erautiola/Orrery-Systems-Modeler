@@ -70,6 +70,15 @@ test("Parametric diagram type + constraint/value props exist", () => {
   assert.ok(Model.RELATIONSHIPS.binding);
 });
 
+test("Timing diagram type + timeline element with states/changes", () => {
+  assert.ok(Model.DIAGRAMS.timing, "timing diagram type");
+  assert.ok(Model.DIAGRAMS.timing.elements.includes("timeline"));
+  const t = Model.newElement("timeline");
+  assert.ok(Array.isArray(t.states) && t.states.length >= 1);
+  assert.ok(Array.isArray(t.changes) && t.changes[0].state);
+  assert.equal(typeof t.tMax, "number");
+});
+
 test("Communication diagram type + object/message exist", () => {
   assert.ok(Model.DIAGRAMS.communication, "communication diagram type");
   assert.ok(Model.DIAGRAMS.communication.elements.includes("comObject"));

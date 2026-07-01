@@ -63,6 +63,8 @@
     // --- interaction (sequence / communication) ---
     lifeline:     { label: "Lifeline",      shape: "lifeline",   compartments: [] },
     comObject:    { label: "Object",        shape: "object",     compartments: [], underline: true },
+    // --- timing ---
+    timeline:     { label: "Timeline",      shape: "timeline",   compartments: [] },
     // --- data modeling (ER) ---
     dbtable:      { label: "DB Table",      shape: "dbtable",    compartments: [], stereotype: "table" },
     // --- SysML parametric ---
@@ -175,6 +177,11 @@
       elements: ["comObject", "actor", "note"],
       relationships: ["commMsg", "anchor"],
     },
+    timing: {
+      label: "Timing Diagram", abbr: "tim",
+      elements: ["timeline", "note"],
+      relationships: [],
+    },
   };
 
   const VISIBILITIES = ["public", "private", "protected", "package"];
@@ -220,6 +227,11 @@
     if (actualType === "history") el.deep = false;
     if (actualType === "lifeline") el.represents = "";
     if (actualType === "dbtable") el.columns = [];
+    if (actualType === "timeline") {
+      el.states = ["Idle", "Active"];
+      el.tMax = 10;
+      el.changes = [{ at: 0, state: "Idle" }, { at: 4, state: "Active" }, { at: 8, state: "Idle" }];
+    }
     if (actualType === "constraintProp") { el.expression = ""; el.parameters = []; }
     if (actualType === "valueProp") { el.valueType = ""; el.value = ""; }
     return el;
