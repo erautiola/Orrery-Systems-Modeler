@@ -169,3 +169,13 @@ table.grid td.cellmark .mk { color: var(--accent); font-weight: 700; }
 .proj-row .meta { margin-left: auto; font-size: 11px; color: var(--muted); text-align: right; }
 .proj-row .trash { color: var(--bad); background: none; border: none; cursor: pointer; font-size: 15px; }
 .empty { color: var(--muted); text-align: center; padding: 24px; }
+
+/* validation */
+.val-summary { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+.val-list { display: flex; flex-direction: column; gap: 4px; }
+.val-row { display: flex; align-items: flex-start; gap: 8px; padding: 7px 9px; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 13px; }
+.val-row:hover { background: var(--panel-2); border-color: var(--accent); }
+.val-row .vi { flex: 0 0 auto; }
+.val-row.error { border-left: 3px solid var(--bad); }
+.val-row.warning { border-left: 3px solid var(--warn); }
+.val-row.info { border-left: 3px solid var(--accent); }

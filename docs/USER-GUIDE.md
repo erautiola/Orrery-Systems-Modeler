@@ -13,6 +13,15 @@ buttons in the top bar or **Ctrl+Z** / **Ctrl+Y** (also **Ctrl+Shift+Z** to redo
 A burst of typing in a field collapses into a single undo step. History is
 per‑open‑project and resets when you open or create a project.
 
+## Validation
+
+Click **✓ Validate** in the top bar to check the model. Issues are grouped by
+severity (**error / warning / info**) — e.g. unnamed elements, dangling
+relationships, generalization cycles, empty enumerations, abstract types with no
+subtypes, tables without a primary key, foreign keys that reference a missing
+column, requirements missing id/text, and diagrams that reference deleted
+elements. **Click any issue** to jump to and select the offending element.
+
 ## Appearance (light / dark)
 
 Use the **☾ / ☀ button** in the top bar to switch between dark and light themes.

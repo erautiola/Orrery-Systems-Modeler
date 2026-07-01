@@ -3,6 +3,16 @@
 All notable changes to Orrery Systems Modeler are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- **Model validation** — a ✓ Validate action runs a rules engine (unnamed
+  elements, dangling relationships, generalization cycles, empty enumerations,
+  abstract types without subtypes, tables without a primary key, FK column
+  mismatches, requirements missing id/text, diagrams referencing deleted
+  elements, …). Issues are grouped by severity and **click-to-navigate** to the
+  element. Pure `validate.js` module with unit tests.
+
 ## [0.1.4] - 2026-06-30
 
 ### Added
