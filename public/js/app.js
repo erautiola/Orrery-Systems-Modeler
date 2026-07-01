@@ -779,6 +779,40 @@
     return li;
   }
 
+  // ============================================================ VALIDATION
+  function runValidation() {
+    if (!S.model) return status("Open a project first.", true);
+    const issues = Validate.run(S.model);
+    const s = Validate.summary(issues);
+    status(`Validation: ${s.error} error(s), ${s.warning} warning(s), ${s.info} info.`, s.error > 0);
+    const icon = { error: "⛔", warning: "⚠️", info: "ℹ️" };
+    const body = issues.length
+      ? `<div class="val-summary">${s.error} errors · ${s.warning} warnings · ${s.info} info — click an item to locate it</div>` +
+        `<div class="val-list">` + issues.map((iss, i) =>
+          `<div class="val-row ${iss.severity}" data-i="${i}"><span class="vi">${icon[iss.severity]}</span><span>${esc(iss.message)}</span></div>`).join("") + `</div>`
+      : `<div class="empty">✓ No problems found.</div>`;
+    const m = modal("Model validation", body, [{ label: "Close", act: "close" }]);
+    m.querySelectorAll(".val-row").forEach((row) => row.addEventListener("click", () => {
+      const iss = issues[+row.dataset.i]; closeModal(); navigateToRef(iss.ref);
+    }));
+  }
+  function navigateToRef(ref) {
+    if (!ref) return;
+    if (ref.kind === "diagram") { const d = S.model.diagrams.find((x) => x.id === ref.id); if (d) selectDiagram(d); return; }
+    if (ref.kind === "element") {
+      const d = S.model.diagrams.find((x) => x.nodes.some((n) => n.elementId === ref.id));
+      if (d) { selectDiagram(d); S.editor.reselect({ kind: "element", id: ref.id }); S.editor.centerOn(ref.id); }
+      else status("That element isn't placed on any diagram — drop it on one to locate it.");
+      return;
+    }
+    if (ref.kind === "relationship") {
+      const r = S.model.relationships.find((x) => x.id === ref.id); if (!r) return;
+      const d = S.model.diagrams.find((x) => { const ids = x.nodes.map((n) => n.elementId); return ids.includes(r.sourceId) && ids.includes(r.targetId); });
+      if (d) { selectDiagram(d); S.editor.reselect({ kind: "relationship", id: ref.id }); }
+      else status("That relationship isn't shown on any diagram.");
+    }
+  }
+
   // ============================================================ MODALS
   function modal(title, bodyHtml, buttons) {
     const root = $("modalRoot"); root.hidden = false;
@@ -830,6 +864,7 @@
   $("addTableBtn").addEventListener("click", addTable);
   $("undoBtn").addEventListener("click", undo);
   $("redoBtn").addEventListener("click", redo);
+  $("validateBtn").addEventListener("click", runValidation);
   $("importInput").addEventListener("change", (e) => { const f = e.target.files[0]; if (f) importXmiFile(f); e.target.value = ""; });
   $("zoomIn").addEventListener("click", () => S.editor.zoomIn());
   $("zoomOut").addEventListener("click", () => S.editor.zoomOut());
