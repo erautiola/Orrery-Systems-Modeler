@@ -3,6 +3,15 @@
 All notable changes to Orrery Systems Modeler are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- **Richer IBD port/flow semantics** — ports **snap to their part's border** and
+  carry a **direction** (in/out/inout, shown as a triangle), a **flow type**, and
+  a **conjugated** flag (`~`); drop a port onto a part (or reassign via *On part*)
+  to attach it. **Item flows** carry a typed item and render as `«flow» item :
+  Type` with a directional arrow.
+
 ## [0.1.5] - 2026-06-30
 
 ### Added

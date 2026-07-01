@@ -177,10 +177,16 @@
       let i = 1, name = base + i;
       while (state.model.elements.some((e) => e.name === name)) name = base + (++i);
       el.name = name;
-      // drop inside a container? (composite state / package)
-      const C = containerAt(x, y, el.type);
-      if (C) { el.ownerId = C.id; x -= C.cx; y -= C.cy; }
-      else el.ownerId = null;
+      if (el.type === "port") {
+        // ports attach to the part they're dropped on (rendered on its border)
+        const part = partAt(x, y);
+        el.ownerId = part ? part.id : null;
+      } else {
+        // drop inside a container? (composite state / package)
+        const C = containerAt(x, y, el.type);
+        if (C) { el.ownerId = C.id; x -= C.cx; y -= C.cy; }
+        else el.ownerId = null;
+      }
       state.model.elements.push(el);
       const sz = Renderer.computeSize(el);
       state.diagram.nodes.push({ elementId: el.id, x: Math.round(x), y: Math.round(y), w: sz.w, h: sz.h });
@@ -205,6 +211,16 @@
       }
       return best;
     }
+    // the part whose box contains a world point (for attaching ports)
+    function partAt(wx, wy) {
+      const abs = state.layers && state.layers.absById; if (!abs) return null;
+      for (const [id, a] of abs) {
+        const el = Model.elementById(state.model, id);
+        if (!el || el.type !== "part") continue;
+        if (wx >= a.x && wx <= a.x + a.w && wy >= a.y && wy <= a.y + a.h) return el;
+      }
+      return null;
+    }
     function canNest(parentEl, childType) {
       if (!parentEl) return false;
       if (parentEl.type === "state") return ["state", "initial", "final", "choice", "forkjoin", "junction", "history", "note"].includes(childType);
@@ -227,6 +243,11 @@
       const el = Model.elementById(state.model, d.id); if (!el) return;
       const newAbsX = d.ax0 + (d.n.x - d.x0), newAbsY = d.ay0 + (d.n.y - d.y0);
       const cx = newAbsX + d.n.w / 2, cy = newAbsY + d.n.h / 2;
+      if (el.type === "port") { // attach to (or detach from) a part
+        const part = partAt(cx, cy);
+        el.ownerId = part ? part.id : null;
+        return;
+      }
       const C = containerAt(cx, cy, el.type, el.id);
       const newOwner = C ? C.id : null;
       if (newOwner === (el.ownerId || null)) return; // unchanged

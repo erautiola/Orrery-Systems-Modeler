@@ -41,7 +41,7 @@
     constraint:   { label: "Constraint",    shape: "classifier", compartments: ["attributes"], stereotype: "constraint" },
     interfaceBlock:{ label: "Interface Block", shape: "classifier", compartments: ["attributes", "operations"], stereotype: "interfaceBlock" },
     part:         { label: "Part",          shape: "part",       compartments: ["attributes"], stereotype: null },
-    port:         { label: "Port",          shape: "port",       compartments: [], stereotype: null },
+    port:         { label: "Port",          shape: "port",       compartments: [], stereotype: null, fixedSize: [16, 16] },
     requirement:  { label: "Requirement",   shape: "requirement", compartments: [], stereotype: "requirement", tags: ["id", "text"] },
     // --- UML behavioral ---
     actor:        { label: "Actor",         shape: "actor",      compartments: [] },
@@ -227,6 +227,7 @@
     if (actualType === "history") el.deep = false;
     if (actualType === "lifeline") el.represents = "";
     if (actualType === "dbtable") el.columns = [];
+    if (actualType === "port") { el.direction = "inout"; el.flowType = ""; el.isConjugated = false; }
     if (actualType === "timeline") {
       el.states = ["Idle", "Active"];
       el.tMax = 10;
@@ -256,6 +257,7 @@
     if (type === "fk") { r.fkColumn = ""; r.refColumn = ""; }
     if (type === "controlflow") { r.guard = ""; }
     if (type === "commMsg") { r.seq = ""; }
+    if (type === "itemflow") { r.itemName = ""; r.itemType = ""; }
     return r;
   }
   // UML transition label: "trigger [guard] / effect"
@@ -263,6 +265,15 @@
     let s = r.trigger || "";
     if (r.guard) s += " [" + r.guard + "]";
     if (r.effect) s += " / " + r.effect;
+    return s.trim() || r.name || "";
+  }
+  // SysML port label: "~name : Type"
+  function portLabel(el) {
+    return (el.isConjugated ? "~" : "") + (el.name || "") + (el.flowType ? " : " + el.flowType : "");
+  }
+  // item flow label: "item : Type"
+  function flowLabel(r) {
+    const s = (r.itemName || "") + (r.itemType ? " : " + r.itemType : "");
     return s.trim() || r.name || "";
   }
   // communication message label: "seq: name"
@@ -307,6 +318,7 @@
     uid, ELEMENTS, RELATIONSHIPS, DIAGRAMS, VISIBILITIES, TABLES,
     newModel, newElement, newAttribute, newOperation, newRelationship, newDiagram, newTable, newColumn,
     elementById, relsTouching, removeElement, removeRelationship, stereoText, transitionLabel, messageLabel, commLabel,
+    portLabel, flowLabel,
   };
   if (typeof module !== "undefined" && module.exports) module.exports = api; // Node (tests)
   if (root) root.Model = api;                                                // browser
