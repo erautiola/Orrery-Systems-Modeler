@@ -9,7 +9,7 @@
 
 [![CI](https://github.com/erautiola/Orrery-Systems-Modeler/actions/workflows/ci.yml/badge.svg)](https://github.com/erautiola/Orrery-Systems-Modeler/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/erautiola/Orrery-Systems-Modeler/actions/workflows/codeql.yml/badge.svg)](https://github.com/erautiola/Orrery-Systems-Modeler/actions/workflows/codeql.yml)
-![version](https://img.shields.io/badge/version-0.1.3-blue)
+![version](https://img.shields.io/badge/version-0.1.4-blue)
 
 A server-based, multi-user UML & SysML modeling tool. Runs as a small Node.js
 web server (packaged with Docker so it runs identically on Windows, Linux, Mac,
@@ -166,10 +166,10 @@ Planned next phases (real-time co-editing is intentionally **out of scope** —
 the model is *shared library, separate work*: everyone shares projects, saves are
 conflict-checked):
 
-- **Timing** & **Communication** diagrams (Activity, Parametric, Sequence, and
-  ER/SQL are done).
-- Accounts / permissions, model validation rules, undo-redo history, and richer
-  IBD port/flow semantics.
+- **All 14 UML/SysML diagram types are implemented** (structural, behavioral,
+  SysML, ER/SQL, Timing, Communication) with undo/redo and light/dark theming.
+- Remaining: accounts / permissions, model validation rules, and richer IBD
+  port/flow semantics.
 
 ---
 
