@@ -1,0 +1,13 @@
+services:
+  modeler:
+    # Prebuilt image from GitHub Container Registry — no clone/build needed.
+    image: ghcr.io/erautiola/orrery-systems-modeler:latest
+    container_name: orrery-systems-modeler
+    ports:
+      - "8080:8137" # change the host side (left) if 8080 is taken
+    volumes:
+      - modeler-data:/data
+    restart: unless-stopped
+
+volumes:
+  modeler-data:
