@@ -9,7 +9,7 @@
 
 [![CI](https://github.com/erautiola/Orrery-Systems-Modeler/actions/workflows/ci.yml/badge.svg)](https://github.com/erautiola/Orrery-Systems-Modeler/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/erautiola/Orrery-Systems-Modeler/actions/workflows/codeql.yml/badge.svg)](https://github.com/erautiola/Orrery-Systems-Modeler/actions/workflows/codeql.yml)
-![version](https://img.shields.io/badge/version-0.1.5-blue)
+![version](https://img.shields.io/badge/version-0.1.6-blue)
 
 A server-based, multi-user UML & SysML modeling tool. Runs as a small Node.js
 web server (packaged with Docker so it runs identically on Windows, Linux, Mac,
