@@ -24,7 +24,25 @@ requirements, and the REST API, with embedded UML & SysML (PlantUML) diagrams.
 
 ---
 
-## Run it
+## Install (prebuilt image — easiest)
+
+No clone or build needed — pull the published image from GitHub Container Registry:
+
+```bash
+docker run -d -p 8080:8137 -v modeler-data:/data \
+  ghcr.io/erautiola/orrery-systems-modeler:latest
+```
+
+…or with Compose (see [`docker-compose.ghcr.yml`](docker-compose.ghcr.yml)):
+
+```bash
+docker compose -f docker-compose.ghcr.yml up -d
+```
+
+Then open **http://localhost:8080**. Pin a version with `:v0.1.6` instead of
+`:latest`. (Data persists in the `modeler-data` volume.)
+
+## Run from source
 
 You need Docker. From this folder:
 
