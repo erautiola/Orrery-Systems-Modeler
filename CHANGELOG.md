@@ -6,6 +6,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- **Easy install** — a prebuilt image is published to **GHCR** on each release
+  (`docker run ghcr.io/erautiola/orrery-systems-modeler:latest`, plus
+  `docker-compose.ghcr.yml`), and **standalone desktop installers**
+  (Windows/macOS/Linux, Electron) that run Orrery in their own window with no
+  browser or Docker.
 - **Richer IBD port/flow semantics** — ports **snap to their part's border** and
   carry a **direction** (in/out/inout, shown as a triangle), a **flow type**, and
   a **conjugated** flag (`~`); drop a port onto a part (or reassign via *On part*)

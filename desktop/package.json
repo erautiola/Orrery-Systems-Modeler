@@ -1,0 +1,27 @@
+{
+  "name": "orrery-systems-modeler-desktop",
+  "version": "0.1.6",
+  "private": true,
+  "description": "Orrery Systems Modeler — standalone desktop app",
+  "author": "EDA4 LLC",
+  "main": "main.js",
+  "scripts": {
+    "prepare-resources": "node prepare.js",
+    "start": "npm run prepare-resources && electron .",
+    "dist": "npm run prepare-resources && electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^31.7.7",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "llc.eda4.orrery",
+    "productName": "Orrery Systems Modeler",
+    "directories": { "output": "dist", "buildResources": "build" },
+    "files": ["main.js", "package.json"],
+    "extraResources": [{ "from": "resources", "to": "app" }],
+    "win": { "target": "nsis" },
+    "mac": { "target": "dmg", "category": "public.app-category.developer-tools" },
+    "linux": { "target": "AppImage", "category": "Development" }
+  }
+}
