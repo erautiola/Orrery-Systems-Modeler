@@ -39,8 +39,8 @@ docker run -d -p 8080:8137 -v modeler-data:/data \
 docker compose -f docker-compose.ghcr.yml up -d
 ```
 
-Then open **http://localhost:8080**. Pin a version with `:v0.1.6` instead of
-`:latest`. (Data persists in the `modeler-data` volume.)
+Then open **http://localhost:8080**. Pin a version with a tag like `:0.1.6`
+instead of `:latest`. (Data persists in the `modeler-data` volume.)
 
 ## Desktop app (no browser, no Docker)
 
