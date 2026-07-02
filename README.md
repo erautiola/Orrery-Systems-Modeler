@@ -42,6 +42,17 @@ docker compose -f docker-compose.ghcr.yml up -d
 Then open **http://localhost:8080**. Pin a version with `:v0.1.6` instead of
 `:latest`. (Data persists in the `modeler-data` volume.)
 
+## Desktop app (no browser, no Docker)
+
+Prebuilt **standalone installers** (Windows `.exe`, macOS `.dmg`, Linux
+`.AppImage`) are attached to each [release](https://github.com/erautiola/Orrery-Systems-Modeler/releases).
+The desktop app bundles the server and shows Orrery in its **own window** — no
+browser and no Docker required. Projects are stored per-user under your OS
+app-data folder.
+
+Build locally (needs Node): `cd desktop && npm install && npm run dist` →
+installers land in `desktop/dist/`.
+
 ## Run from source
 
 You need Docker. From this folder:
