@@ -5,7 +5,7 @@
   "use strict";
 
   async function req(method, url, body) {
-    const opts = { method, headers: {} };
+    const opts = { method, headers: {}, credentials: "same-origin" }; // send the session cookie
     if (body !== undefined) { opts.headers["Content-Type"] = "application/json"; opts.body = JSON.stringify(body); }
     const res = await fetch(url, opts);
     if (res.status === 204) return null;
@@ -22,5 +22,9 @@
     rename: (id, name) => req("PATCH", "/api/projects/" + id, { name }),
     remove: (id) => req("DELETE", "/api/projects/" + id),
     health: () => req("GET", "/api/health"),
+    // auth
+    me: () => req("GET", "/api/auth/me"),
+    login: (username, password) => req("POST", "/api/auth/login", { username, password }),
+    logout: () => req("POST", "/api/auth/logout"),
   };
 })(window);

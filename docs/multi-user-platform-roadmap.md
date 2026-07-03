@@ -85,7 +85,15 @@ New tables (SQLite). Projects can remain JSON files keyed by id, or move into a
 Ordering rule: **identity must land first** — locks, permissions, CM authorship,
 and seat counting all need "who is this user."
 
-### Phase 1 — Storage foundation + Authentication
+### Phase 1 — Authentication  ✅ *shipped (initial)*
+> **Implementation note:** Phase 1 landed on the existing **file-store** pattern
+> (scrypt hashing + JSON-backed user/session stores under `<DATA_DIR>/.auth/`),
+> **not** SQLite. Rationale: zero new dependencies and identical behaviour in
+> Docker **and** Electron. Node's built-in `node:sqlite` works in the Alpine
+> image but its availability in Electron's bundled Node is unverified, so SQLite
+> adoption is deferred to the phase that needs relational queries (CM/history),
+> where it can be validated against Electron. Everything below remains the plan.
+
 - Add SQLite (recommend `better-sqlite3`: embedded, synchronous, zero-ops) and a
   small migration runner.
 - Password hashing (`argon2id` via a prebuilt binding, or `bcryptjs` pure-JS to

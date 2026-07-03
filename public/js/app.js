@@ -1219,5 +1219,36 @@
   });
   initTheme();
 
-  refreshConnection();
+  // ---------------------------------------------------------------- auth
+  function showUser(user) {
+    $("userChip").hidden = false;
+    $("userName").textContent = user.username + (user.role === "admin" ? " · admin" : "");
+  }
+  function showLogin() {
+    const screen = $("loginScreen"), form = $("loginForm"), err = $("loginErr");
+    screen.hidden = false;
+    $("loginUser").focus();
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault(); err.hidden = true; $("loginBtn").disabled = true;
+      try {
+        const { user } = await Api.login($("loginUser").value.trim(), $("loginPass").value);
+        screen.hidden = true; showUser(user); refreshConnection();
+      } catch (ex) {
+        err.textContent = ex.message || "Sign in failed"; err.hidden = false;
+        $("loginBtn").disabled = false; $("loginPass").select();
+      }
+    });
+  }
+  $("logoutBtn").addEventListener("click", async () => {
+    try { await Api.logout(); } catch (e) { /* ignore */ }
+    location.reload();
+  });
+  async function initAuth() {
+    let info;
+    try { info = await Api.me(); } catch (e) { info = { authRequired: false, user: null }; }
+    if (info.authRequired && !info.user) { showLogin(); return; } // gate the app on sign-in
+    if (info.user) showUser(info.user);
+    refreshConnection();
+  }
+  initAuth();
 })();
