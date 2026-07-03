@@ -5,6 +5,13 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- **Long element names now wrap** inside their box instead of overflowing the
+  edges ([#33](https://github.com/erautiola/Orrery-Systems-Modeler/issues/33)).
+  Names are word-wrapped (with hard-breaking for a single over-long word) and the
+  box header grows to fit the extra lines. New pure `text-wrap.js` module with
+  unit tests.
+
 ### Security
 - Resolved the CodeQL code-scanning findings: `path.basename` + containment
   guard on project-file paths (path-injection / untrusted file write), newline

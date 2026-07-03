@@ -13,6 +13,7 @@
   "use strict";
   const SVGNS = "http://www.w3.org/2000/svg";
   const PADX = 12, LINE = 16, HEADPAD = 8, NAME_H = 20, STEREO_H = 15, MINW = 120, MINH = 60;
+  const NAME_LH = 17, MAXW = 380; // wrapped-name line height; max auto width
   const C_PAD = 16, C_MINW = 170, C_MINH = 110; // composite container padding / minimums
 
   const _cv = document.createElement("canvas");
@@ -22,6 +23,26 @@
   const F_FEAT = "11px 'Cascadia Code', Consolas, monospace";
   const tw = (s, f) => { _ctx.font = f; return _ctx.measureText(s || "").width; };
   const VIS = { public: "+", private: "−", protected: "#", package: "~" };
+
+  // wrap an element name to fit a box `w` wide (in the bold name font)
+  function nameLines(name, w) {
+    return TextWrap.wrapLines(name || "", Math.max(20, w - PADX * 2), (s) => tw(s, F_NAME));
+  }
+  // header height for a box whose name occupies `n` wrapped lines
+  function headHeight(n, stereo) {
+    return HEADPAD * 2 + NAME_H + (stereo ? STEREO_H : 0) + Math.max(0, n - 1) * NAME_LH;
+  }
+  // append a centered, possibly multi-line label; returns the text node
+  function centeredLines(g, cx, firstBaseline, lines, lineH, attrs) {
+    const t = el2("text", { x: cx, "text-anchor": "middle", ...attrs });
+    lines.forEach((ln, i) => {
+      const ts = el2("tspan", { x: cx, y: firstBaseline + i * lineH });
+      ts.textContent = ln;
+      t.appendChild(ts);
+    });
+    g.appendChild(t);
+    return t;
+  }
 
   // theme-aware diagram palette, refreshed from CSS variables on each render()
   let PAL = { edge: "#9fb0cf", edgeText: "#e6ecf5", edgeDim: "#c6d2e8", canvas: "#0c111b" };
@@ -119,8 +140,8 @@
     if (stereo) w = Math.max(w, tw(stereo, F_STEREO) + PADX * 2);
     const comps = (spec.compartments || []).map((c) => compartmentItems(el, c));
     for (const items of comps) for (const it of items) w = Math.max(w, tw(it.text, F_FEAT) + PADX * 2);
-    w = Math.min(w, 380);
-    let h = HEADPAD * 2 + NAME_H + (stereo ? STEREO_H : 0);
+    w = Math.min(w, MAXW);
+    let h = headHeight(nameLines(el.name, w).length, stereo);
     if (spec.shape === "requirement") h += (Object.keys(el.tags || {}).length || 0) * LINE + 8;
     for (const items of comps) h += Math.max(items.length ? items.length * LINE + 8 : 10, 10);
     return { w: Math.round(w), h: Math.round(Math.max(h, MINH)) };
@@ -211,7 +232,8 @@
     const spec = Model.ELEMENTS[el.type];
     const W = node.w, H = node.h, ac = accent(el);
     const stereo = Model.stereoText(el);
-    const headH = HEADPAD * 2 + NAME_H + (stereo ? STEREO_H : 0);
+    const lines = nameLines(el.name, W);
+    const headH = headHeight(lines.length, stereo);
     g.appendChild(el2("rect", { class: "node-bg", width: W, height: H, rx: 4 }));
     g.appendChild(el2("rect", { class: "node-head", width: W, height: headH, rx: 4, fill: ac.head }));
     g.appendChild(el2("rect", { y: headH - 4, width: W, height: 4, fill: ac.head }));
@@ -223,8 +245,8 @@
     }
     let y = HEADPAD + 11;
     if (stereo) { g.appendChild(text(W / 2, y, stereo, { "text-anchor": "middle", "font-style": "italic", "font-size": 12, fill: "#6b4ea8" })); y += STEREO_H; }
-    g.appendChild(text(W / 2, y + 6, el.name, { "text-anchor": "middle", "font-weight": 700, "font-size": 14,
-      "font-style": el.isAbstract ? "italic" : "normal", "text-decoration": spec.underline ? "underline" : "none", fill: "#1a2236" }));
+    centeredLines(g, W / 2, y + 6, lines, NAME_LH, { "font-weight": 700, "font-size": 14,
+      "font-style": el.isAbstract ? "italic" : "normal", "text-decoration": spec.underline ? "underline" : "none", fill: "#1a2236" });
     let cy = headH;
     for (const comp of (spec.compartments || [])) cy = drawCompartment(g, compartmentItems(el, comp), cy, W);
   }
@@ -242,13 +264,14 @@
 
   function drawRequirement(g, el, node) {
     const W = node.w, H = node.h, ac = accent(el);
-    const headH = HEADPAD * 2 + NAME_H + STEREO_H;
+    const lines = nameLines(el.name, W);
+    const headH = headHeight(lines.length, true);
     g.appendChild(el2("rect", { class: "node-bg", width: W, height: H, rx: 4 }));
     g.appendChild(el2("rect", { class: "node-head", width: W, height: headH, rx: 4, fill: ac.head }));
     g.appendChild(el2("rect", { y: headH - 4, width: W, height: 4, fill: ac.head }));
     g.appendChild(el2("rect", { width: 4, height: H, fill: ac.bar, rx: 2 }));
     g.appendChild(text(W / 2, HEADPAD + 11, "«requirement»", { "text-anchor": "middle", "font-style": "italic", "font-size": 12, fill: "#6b4ea8" }));
-    g.appendChild(text(W / 2, HEADPAD + 28, el.name, { "text-anchor": "middle", "font-weight": 700, "font-size": 14, fill: "#1a2236" }));
+    centeredLines(g, W / 2, HEADPAD + 28, lines, NAME_LH, { "font-weight": 700, "font-size": 14, fill: "#1a2236" });
     let cy = headH; g.appendChild(el2("line", { x1: 0, y1: cy, x2: W, y2: cy, stroke: "#c2cbe0" }));
     let y = cy + 14;
     for (const k of Object.keys(el.tags || {})) { g.appendChild(text(PADX, y, k + " = " + (el.tags[k] || ""), { "font-size": 11, fill: "#1a2236", "font-family": "'Cascadia Code', monospace" })); y += LINE; }
