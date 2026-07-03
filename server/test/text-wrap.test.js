@@ -38,3 +38,12 @@ test("collapses runs of whitespace", () => {
 test("non-positive width returns the text unbroken", () => {
   assert.deepEqual(wrapLines("hello world", 0, measure), ["hello world"]);
 });
+
+test("wraps a long requirement text tag onto multiple lines (issue #44)", () => {
+  // the requirement 'text' tag renders as "text = <statement>" and must wrap
+  const tag = "text = The system shall maintain a positive link margin under all specified conditions";
+  const lines = wrapLines(tag, 260, measure); // ~26 char budget
+  assert.ok(lines.length >= 3, "long tag wrapped");
+  for (const l of lines) assert.ok(measure(l) <= 260, `line fits: "${l}"`);
+  assert.equal(lines.join(" "), tag.replace(/\s+/g, " "), "no words lost");
+});

@@ -1021,7 +1021,12 @@
   function closeModal() { const r = $("modalRoot"); r.hidden = true; r.innerHTML = ""; }
 
   // ---- lightweight right-click context menu -----------------------------
-  function closeContextMenu() { const m = $("ctxMenu"); if (m) m.remove(); }
+  let ctxDismiss = null, ctxKey = null;
+  function closeContextMenu() {
+    const m = $("ctxMenu"); if (m) m.remove();
+    if (ctxDismiss) { document.removeEventListener("mousedown", ctxDismiss, true); ctxDismiss = null; }
+    if (ctxKey) { document.removeEventListener("keydown", ctxKey, true); ctxKey = null; }
+  }
   function contextMenu(clientX, clientY, items) {
     closeContextMenu();
     if (!items.length) return;
@@ -1035,10 +1040,14 @@
       menu.appendChild(b);
     }
     document.body.appendChild(menu);
-    // dismiss on the next click anywhere (or Escape)
+    // Dismiss on an outside click or Escape. Crucially, a click *inside* the
+    // menu must NOT be swallowed here — otherwise removing the menu on mousedown
+    // would stop the item's own click from ever firing (the old bug).
+    ctxDismiss = (e) => { if (!menu.contains(e.target)) closeContextMenu(); };
+    ctxKey = (e) => { if (e.key === "Escape") closeContextMenu(); };
     setTimeout(() => {
-      window.addEventListener("mousedown", closeContextMenu, { once: true });
-      window.addEventListener("keydown", function esc(e) { if (e.key === "Escape") { closeContextMenu(); window.removeEventListener("keydown", esc); } });
+      document.addEventListener("mousedown", ctxDismiss, true);
+      document.addEventListener("keydown", ctxKey, true);
     }, 0);
   }
   // context-menu items for an element, by type (extensible)

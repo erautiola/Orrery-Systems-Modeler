@@ -33,6 +33,17 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   current diagram.
 
 ### Fixed
+- **Right‑click “Create IBD” now works**
+  ([#45](https://github.com/erautiola/Orrery-Systems-Modeler/issues/45)). The
+  context‑menu dismiss handler was removing the menu on the item's own mousedown,
+  so the item's click never fired — the menu appeared but nothing happened, in
+  both the canvas and the Model Explorer. It now dismisses only on an *outside*
+  click (or Escape), and the editor ignores non‑left mouse buttons so a
+  right‑click no longer starts a stray drag/selection.
+- **Requirement text wraps**
+  ([#44](https://github.com/erautiola/Orrery-Systems-Modeler/issues/44)). A
+  requirement's tag rows (`id = …`, `text = …`) now word‑wrap to the box instead
+  of overflowing, and requirement boxes get a readable minimum width.
 - **IBD ports & parts.** Ports can now attach to the **block boundary frame** of an
   IBD (drop one on the frame edge, or pick the block under *On part / boundary*) —
   previously a port meant for the enclosing block landed loose inside it. Parts
