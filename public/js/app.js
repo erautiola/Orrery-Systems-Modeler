@@ -943,6 +943,12 @@
   }
 
   // ============================================================ TREE
+  let draggingId = null; // element being dragged in the Model Explorer
+  function reparent(dragId, targetId) {
+    if (!Model.canReparent(S.model, dragId, targetId)) return;
+    Model.elementById(S.model, dragId).ownerId = targetId || null;
+    markDirty(true, "reparent"); renderTree(); if (S.editor) S.editor.render();
+  }
   function renderTree() {
     const tree = $("modelTree"); tree.innerHTML = "";
     if (!S.model) return;
@@ -951,11 +957,21 @@
     const top = roots.length ? roots : S.model.elements;
     for (const e of top.filter((e) => e.type !== "note")) ul.appendChild(treeNode(e));
     tree.appendChild(ul);
+    // drop on empty tree space → move to the root (un-parent)
+    tree.ondragover = (ev) => { if (draggingId && !ev.target.closest(".row")) ev.preventDefault(); };
+    tree.ondrop = (ev) => { if (!ev.target.closest(".row")) { ev.preventDefault(); reparent(draggingId, null); } };
   }
   function treeNode(e) {
     const li = document.createElement("li");
     const row = document.createElement("div"); row.className = "row"; row.dataset.id = e.id;
     row.innerHTML = `<span class="ico">${glyph(e.type)}</span><span>${esc(e.name)}</span>`;
+    // drag-and-drop re-parenting (move between packages / into blocks)
+    row.draggable = true;
+    row.addEventListener("dragstart", (ev) => { ev.stopPropagation(); draggingId = e.id; ev.dataTransfer.effectAllowed = "move"; ev.dataTransfer.setData("text/plain", e.id); });
+    row.addEventListener("dragend", () => { draggingId = null; document.querySelectorAll(".row.drop-target").forEach((r) => r.classList.remove("drop-target")); });
+    row.addEventListener("dragover", (ev) => { if (Model.canReparent(S.model, draggingId, e.id)) { ev.preventDefault(); ev.stopPropagation(); row.classList.add("drop-target"); } });
+    row.addEventListener("dragleave", () => row.classList.remove("drop-target"));
+    row.addEventListener("drop", (ev) => { ev.preventDefault(); ev.stopPropagation(); row.classList.remove("drop-target"); reparent(draggingId, e.id); });
     row.addEventListener("click", () => {
       // always populate Properties; if the element is placed on a diagram, focus
       // it there (the current one if possible, else open one that shows it)

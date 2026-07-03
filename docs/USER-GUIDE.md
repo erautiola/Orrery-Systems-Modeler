@@ -49,7 +49,11 @@ Each diagram tab remembers its own pan/zoom.
 
 **Model Explorer:** clicking an element **shows its Properties** and, if it's
 placed on a diagram, focuses it there (opening/switching to that diagram) — it no
-longer asks to drop it onto the current diagram.
+longer asks to drop it onto the current diagram. **Drag a tree row onto another**
+to re-parent it — move an element between **packages** or **into a block**; drop
+on empty tree space to move it back to the root. (Cycles are prevented, and
+ownership set this way is logical — a block still draws as a plain box; only
+packages, composite states, and partitions visually nest their children.)
 
 ## Diagrams
 
