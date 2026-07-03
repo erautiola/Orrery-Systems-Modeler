@@ -435,6 +435,31 @@
     }
     return true;
   }
+  // ---- diagram/table association (Model Explorer) ------------------------
+  // which element a diagram is filed under: its explicit ownerId, else (for an
+  // IBD) the block it depicts. null = unassociated (shown at the tree root).
+  function diagramOwner(d) {
+    if (d.ownerId != null) return d.ownerId;
+    if (d.type === "ibd" && d.blockId != null) return d.blockId;
+    return null;
+  }
+  function tableOwner(t) { return t.ownerId != null ? t.ownerId : null; }
+  // diagrams + tables associated with element `elId` (as view descriptors)
+  function viewsForElement(model, elId) {
+    const out = [];
+    for (const d of (model.diagrams || [])) if (diagramOwner(d) === elId) out.push({ kind: "diagram", id: d.id, name: d.name, dtype: d.type });
+    for (const t of (model.tables || [])) if (tableOwner(t) === elId) out.push({ kind: "table", id: t.id, name: t.name, dtype: t.kind });
+    return out;
+  }
+  // views shown at the tree root: unfiled, or whose owner element is gone
+  function unassociatedViews(model) {
+    const out = [];
+    const orphan = (o) => o == null || !elementById(model, o);
+    for (const d of (model.diagrams || [])) if (orphan(diagramOwner(d))) out.push({ kind: "diagram", id: d.id, name: d.name, dtype: d.type });
+    for (const t of (model.tables || [])) if (orphan(tableOwner(t))) out.push({ kind: "table", id: t.id, name: t.name, dtype: t.kind });
+    return out;
+  }
+
   function stereoText(el) {
     const list = el.stereotypes && el.stereotypes.length
       ? el.stereotypes
@@ -447,6 +472,7 @@
     newModel, newElement, newAttribute, newOperation, newRelationship, newDiagram, newTable, newColumn,
     elementById, relsTouching, removeElement, removeRelationship, stereoText, transitionLabel, messageLabel, commLabel,
     portLabel, flowLabel, blockParts, blockPorts, createIbdFromBlock, boundaryBand, canReparent,
+    diagramOwner, viewsForElement, unassociatedViews,
   };
   if (typeof module !== "undefined" && module.exports) module.exports = api; // Node (tests)
   if (root) root.Model = api;                                                // browser
