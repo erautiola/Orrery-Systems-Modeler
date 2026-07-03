@@ -294,6 +294,84 @@
     return { id: uid("dgm"), type, name: name || spec.label, nodes: [], hidden: [] };
   }
 
+  // ---- IBD from a block --------------------------------------------------
+  // lower-case the first letter (a block "Wheel" -> a part named "wheel")
+  function lowerFirst(s) { return s ? s.charAt(0).toLowerCase() + s.slice(1) : s; }
+
+  // Enumerate the candidate parts of a block, so a caller can offer them for
+  // import into an IBD. Sources, in order:
+  //   - composition / aggregation relationships whose whole end is the block
+  //     (the target block types the part; targetRole names it)
+  //   - `part` elements already owned by the block (part.ownerId === blockId)
+  // Returns de-duped rows: { key, name, typeName, typeId, mult, source,
+  //                          existingPartId? }  (key is stable & unique)
+  function blockParts(model, blockId) {
+    const rows = [];
+    const seen = new Set();
+    const push = (row) => {
+      const k = (row.name || "") + " " + (row.typeId || row.typeName || "");
+      if (seen.has(k)) return;
+      seen.add(k); row.key = "p" + rows.length; rows.push(row);
+    };
+    for (const r of model.relationships || []) {
+      if ((r.type !== "composition" && r.type !== "aggregation") || r.sourceId !== blockId) continue;
+      const tgt = elementById(model, r.targetId);
+      if (!tgt) continue;
+      push({
+        name: r.targetRole || lowerFirst(tgt.name) || "part",
+        typeName: tgt.name || "", typeId: tgt.id,
+        mult: r.targetMult || "", source: r.type, relId: r.id,
+      });
+    }
+    for (const e of model.elements || []) {
+      if (e.type !== "part" || e.ownerId !== blockId) continue;
+      const at = (e.attributes && e.attributes[0]) || null;
+      push({
+        name: e.name || "part", typeName: (at && at.type) || e.typeName || "",
+        typeId: e.typeId || null, mult: "", source: "owned", existingPartId: e.id,
+      });
+    }
+    return rows;
+  }
+
+  // Build an IBD for `block`, importing the chosen candidate rows (from
+  // blockParts). Mutates `model` (adds a diagram, and any new part elements)
+  // and returns the new diagram. `chosen` is an array of blockParts rows.
+  // Existing owned parts are reused; the diagram is tagged with `blockId`.
+  function createIbdFromBlock(model, blockId, chosen, name) {
+    const block = elementById(model, blockId);
+    const d = newDiagram("ibd", name || ("IBD of " + ((block && block.name) || "Block")));
+    if (block) d.blockId = block.id;
+    // grid layout inside the block frame
+    const FRAME_X = 40, FRAME_Y = 48, COLS = 3, GAPX = 40, GAPY = 40, CW = 150, CH = 60;
+    (chosen || []).forEach((row, i) => {
+      let partId = row.existingPartId;
+      if (!partId) {
+        const part = newElement("part");
+        part.name = row.name || "part";
+        part.ownerId = blockId;
+        if (row.typeName) {
+          const at = newAttribute("");
+          at.name = ""; at.type = row.typeName; at.visibility = "public";
+          part.attributes = [at];
+        }
+        if (row.typeId) part.typeId = row.typeId;
+        model.elements.push(part);
+        partId = part.id;
+      }
+      if (d.nodes.some((n) => n.elementId === partId)) return;
+      const col = i % COLS, rowN = Math.floor(i / COLS);
+      d.nodes.push({
+        elementId: partId,
+        x: FRAME_X + col * (CW + GAPX),
+        y: FRAME_Y + rowN * (CH + GAPY),
+        w: CW, h: CH,
+      });
+    });
+    model.diagrams.push(d);
+    return d;
+  }
+
   // ---- helpers -----------------------------------------------------------
   function elementById(model, id) { return model.elements.find((e) => e.id === id); }
   function relsTouching(model, id) {
@@ -318,7 +396,7 @@
     uid, ELEMENTS, RELATIONSHIPS, DIAGRAMS, VISIBILITIES, TABLES,
     newModel, newElement, newAttribute, newOperation, newRelationship, newDiagram, newTable, newColumn,
     elementById, relsTouching, removeElement, removeRelationship, stereoText, transitionLabel, messageLabel, commLabel,
-    portLabel, flowLabel,
+    portLabel, flowLabel, blockParts, createIbdFromBlock,
   };
   if (typeof module !== "undefined" && module.exports) module.exports = api; // Node (tests)
   if (root) root.Model = api;                                                // browser

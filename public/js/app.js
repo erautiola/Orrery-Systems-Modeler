@@ -28,6 +28,16 @@
     onToolReset: () => highlightTool(),
   });
 
+  // right-click a node on the canvas → context actions (e.g. Create IBD)
+  svg.addEventListener("contextmenu", (e) => {
+    const g = e.target.closest(".uml-node");
+    if (!g || !S.model) return;
+    const el = Model.elementById(S.model, g.dataset.id);
+    if (!el) return;
+    const items = elementMenuItems(el);
+    if (items.length) { e.preventDefault(); contextMenu(e.clientX, e.clientY, items); }
+  });
+
   // ---------------------------------------------------------------- status
   function status(msg, err) { const s = $("status"); s.textContent = msg; s.classList.toggle("err", !!err); }
   function markDirty(d, histKey) {
@@ -237,21 +247,92 @@
   }
   function addDiagram() {
     if (!S.model) return status("Open a project first.", true);
-    const opts = Object.entries(Model.DIAGRAMS).map(([k, v]) => `<option value="${k}">${v.label}</option>`).join("");
+    const opts = Object.entries(Model.DIAGRAMS).map(([k, v]) => `<option value="${k}">${esc(v.label)}</option>`).join("");
+    const blocks = S.model.elements.filter((e) => e.type === "block");
     const body = `
       <div class="field"><label>Diagram type</label><select id="dgType">${opts}</select></div>
-      <div class="field"><label>Name</label><input type="text" id="dgName" value="New Diagram"></div>`;
+      <div class="field"><label>Name</label><input type="text" id="dgName" value="New Diagram"></div>
+      <div id="ibdExtra" hidden></div>`;
     const m = modal("New diagram", body, [
       { label: "Cancel", act: "close" },
       { label: "Create", act: "ok", primary: true },
     ]);
+    const typeSel = m.querySelector("#dgType");
+    const extra = m.querySelector("#ibdExtra");
+    function refreshExtra() {
+      if (typeSel.value !== "ibd") { extra.hidden = true; extra.innerHTML = ""; return; }
+      extra.hidden = false;
+      if (!blocks.length) {
+        extra.innerHTML = `<p class="muted">No blocks defined yet — create a block in a BDD first to import its parts. An empty IBD will be created.</p>`;
+        return;
+      }
+      const bopts = blocks.map((b) => `<option value="${b.id}">${esc(b.name)}</option>`).join("");
+      extra.innerHTML = `<div class="field"><label>Owning block</label><select id="ibdBlock">${bopts}</select></div><div id="ibdPicker"></div>`;
+      const bsel = extra.querySelector("#ibdBlock");
+      const refreshPicker = () => { extra.querySelector("#ibdPicker").innerHTML = ibdPickerBody(bsel.value); wirePicker(m); };
+      bsel.addEventListener("change", refreshPicker);
+      refreshPicker();
+    }
+    typeSel.addEventListener("change", refreshExtra);
     m.querySelector('[data-act="ok"]').addEventListener("click", () => {
-      const type = m.querySelector("#dgType").value;
+      const type = typeSel.value;
       const name = m.querySelector("#dgName").value || Model.DIAGRAMS[type].label;
+      if (type === "ibd") {
+        const bsel = m.querySelector("#ibdBlock");
+        const blockId = bsel ? bsel.value : null;
+        const parts = blockId ? Model.blockParts(S.model, blockId) : [];
+        const d = Model.createIbdFromBlock(S.model, blockId, chosenRows(m, parts), name);
+        markDirty(true, "create-ibd"); closeModal(); selectDiagram(d);
+        status(`Created “${d.name}” with ${d.nodes.length} part(s).`);
+        return;
+      }
       const d = Model.newDiagram(type, name);
       S.model.diagrams.push(d); markDirty(true); closeModal(); selectDiagram(d);
     });
     m.querySelector("#dgName").select();
+  }
+
+  // ---- IBD-from-block: shared part-picker + standalone flow --------------
+  // checkbox list of a block's candidate parts (composition/aggregation/owned)
+  function ibdPickerBody(blockId) {
+    const parts = blockId ? Model.blockParts(S.model, blockId) : [];
+    if (!parts.length) {
+      return `<p class="muted">This block has no composed or aggregated parts yet. You can still create an empty IBD and add parts by hand.</p>`;
+    }
+    return `<div class="field"><label>Parts to include</label>
+      <div class="picker-tools"><button type="button" class="mini" data-pick="all">All</button><button type="button" class="mini" data-pick="none">None</button></div>
+      <div class="parts-list">` + parts.map((p) =>
+        `<label class="parts-row"><input type="checkbox" name="parts" value="${esc(p.key)}" checked>
+          <span class="pn">${esc(p.name)}${p.typeName ? " : " + esc(p.typeName) : ""}${p.mult ? " [" + esc(p.mult) + "]" : ""}</span>
+          <span class="src">${esc(p.source)}</span></label>`).join("") + `</div>`;
+  }
+  function wirePicker(m) {
+    m.querySelectorAll("[data-pick]").forEach((b) => b.addEventListener("click", () => {
+      const on = b.dataset.pick === "all";
+      m.querySelectorAll('input[name="parts"]').forEach((c) => { c.checked = on; });
+    }));
+  }
+  function chosenRows(m, parts) {
+    const keys = new Set(Array.from(m.querySelectorAll('input[name="parts"]:checked')).map((c) => c.value));
+    return parts.filter((p) => keys.has(p.key));
+  }
+  // "Create IBD from this block" — its own dialog (from the block's props / menu)
+  function createIbdFromBlock(blockId) {
+    const block = Model.elementById(S.model, blockId);
+    if (!block || block.type !== "block") return;
+    const parts = Model.blockParts(S.model, blockId);
+    const body = `<div class="field"><label>New IBD name</label><input type="text" id="ibdName" value="IBD of ${esc(block.name)}"></div>` + ibdPickerBody(blockId);
+    const m = modal("Create IBD from “" + block.name + "”", body, [
+      { label: "Cancel", act: "close" },
+      { label: "Create IBD", act: "ok", primary: true },
+    ]);
+    wirePicker(m);
+    m.querySelector('[data-act="ok"]').addEventListener("click", () => {
+      const name = m.querySelector("#ibdName").value || ("IBD of " + block.name);
+      const d = Model.createIbdFromBlock(S.model, blockId, chosenRows(m, parts), name);
+      markDirty(true, "create-ibd"); closeModal(); selectDiagram(d);
+      status(`Created “${d.name}” with ${d.nodes.length} part(s).`);
+    });
   }
 
   // ============================================================ PALETTE
@@ -481,6 +562,12 @@
     p.appendChild(textField("Stereotypes (comma-sep)", (el.stereotypes || []).join(", "), (v) => {
       el.stereotypes = v.split(",").map((s) => s.trim()).filter(Boolean); touch(true);
     }));
+
+    if (el.type === "block") {
+      const w = h(`<div class="prop-section"><button class="btn" style="width:100%">⊞ Create IBD from this block</button></div>`);
+      w.querySelector("button").addEventListener("click", () => createIbdFromBlock(el.id));
+      p.appendChild(w);
+    }
 
     if (el.type === "state") {
       p.appendChild(checkField("Composite (contains sub-states)", el.isComposite, (v) => { el.isComposite = v; touch(true); reselect(); }));
@@ -788,6 +875,8 @@
         markDirty(true); S.editor.reselect({ kind: "element", id: e.id });
       }
     });
+    const items = elementMenuItems(e);
+    if (items.length) row.addEventListener("contextmenu", (ev) => { ev.preventDefault(); contextMenu(ev.clientX, ev.clientY, items); });
     li.appendChild(row);
     const kids = S.model.elements.filter((c) => c.ownerId === e.id && c.type !== "note");
     if (kids.length) { const ul = document.createElement("ul"); kids.forEach((k) => ul.appendChild(treeNode(k))); li.appendChild(ul); }
@@ -838,6 +927,34 @@
     return root.querySelector(".modal");
   }
   function closeModal() { const r = $("modalRoot"); r.hidden = true; r.innerHTML = ""; }
+
+  // ---- lightweight right-click context menu -----------------------------
+  function closeContextMenu() { const m = $("ctxMenu"); if (m) m.remove(); }
+  function contextMenu(clientX, clientY, items) {
+    closeContextMenu();
+    if (!items.length) return;
+    const menu = document.createElement("div");
+    menu.className = "ctx-menu"; menu.id = "ctxMenu";
+    menu.style.left = clientX + "px"; menu.style.top = clientY + "px";
+    for (const it of items) {
+      const b = document.createElement("div");
+      b.className = "ctx-item"; b.textContent = it.label;
+      b.addEventListener("click", () => { closeContextMenu(); it.act(); });
+      menu.appendChild(b);
+    }
+    document.body.appendChild(menu);
+    // dismiss on the next click anywhere (or Escape)
+    setTimeout(() => {
+      window.addEventListener("mousedown", closeContextMenu, { once: true });
+      window.addEventListener("keydown", function esc(e) { if (e.key === "Escape") { closeContextMenu(); window.removeEventListener("keydown", esc); } });
+    }, 0);
+  }
+  // context-menu items for an element, by type (extensible)
+  function elementMenuItems(el) {
+    const items = [];
+    if (el.type === "block") items.push({ label: "⊞ Create IBD from block", act: () => createIbdFromBlock(el.id) });
+    return items;
+  }
 
   // ============================================================ HELPERS
   function normalizeModel(m) {

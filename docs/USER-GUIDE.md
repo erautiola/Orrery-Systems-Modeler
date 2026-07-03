@@ -74,7 +74,24 @@ Place **Action**, **Decision/Merge**, **Fork/Join**, **Initial**, **Final**,
 Flow** (add a `[guard]` in Properties) or **Object Flow**. Drop a **Partition**
 (swimlane) and drag actions into it to assign them to that lane.
 
-### Internal Block (IBD) — ports & item flows
+### Internal Block (IBD) — from a block, ports & item flows
+**Create an IBD from a block.** Model a block's structure in a **BDD** first —
+add the child blocks and link them to the whole with **Composition** (or
+**Aggregation**). Then create the block's internal view any of these ways:
+
+- **Right‑click** the block (on the canvas *or* in the Model Explorer) → **Create
+  IBD from block**; or
+- select the block and use **⊞ Create IBD from this block** in Properties; or
+- the **＋** *New diagram* dialog — choose type **Internal Block (IBD)**, then pick
+  the **Owning block**.
+
+A dialog lists the block's parts (each `role : Type [multiplicity]`, from its
+composition/aggregation relationships plus any parts it already owns). **Check the
+ones to import** and click **Create IBD**. The new diagram is drawn with the block
+as a labelled **«block» boundary frame** and the chosen parts placed inside as
+typed part elements. Blocks with no parts still create an empty IBD you can fill
+in by hand.
+
 Place **Part** elements. Drop a **Port** onto a part — it **snaps to the part's
 border**. In the port's Properties set its **direction** (in / out / inout, shown
 as a small triangle), **flow type**, whether it's **conjugated** (`~`), or reassign

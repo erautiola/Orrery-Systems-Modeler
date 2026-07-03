@@ -170,6 +170,20 @@ table.grid td.cellmark .mk { color: var(--accent); font-weight: 700; }
 .proj-row .trash { color: var(--bad); background: none; border: none; cursor: pointer; font-size: 15px; }
 .empty { color: var(--muted); text-align: center; padding: 24px; }
 
+/* IBD part-picker */
+.picker-tools { display: flex; gap: 6px; margin-bottom: 6px; }
+.picker-tools .mini { float: none; width: auto; padding: 0 10px; }
+.parts-list { max-height: 220px; overflow: auto; border: 1px solid var(--border); border-radius: 8px; padding: 6px; }
+.parts-row { display: flex; align-items: center; gap: 8px; padding: 5px 6px; border-radius: 6px; cursor: pointer; }
+.parts-row:hover { background: var(--panel-2); }
+.parts-row .pn { flex: 1; font-size: 13px; }
+.parts-row .src { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+
+/* right-click context menu */
+.ctx-menu { position: fixed; z-index: 200; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 5px; min-width: 190px; box-shadow: 0 8px 24px rgba(0,0,0,.45); }
+.ctx-item { padding: 8px 10px; border-radius: 5px; cursor: pointer; font-size: 13px; color: var(--text); white-space: nowrap; }
+.ctx-item:hover { background: var(--panel-2); }
+
 /* validation */
 .val-summary { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
 .val-list { display: flex; flex-direction: column; gap: 4px; }

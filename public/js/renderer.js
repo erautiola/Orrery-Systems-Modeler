@@ -603,6 +603,22 @@
       absById.set(e.el.id, { x: cx - sz.w / 2, y: cy - sz.h / 2, w: sz.w, h: sz.h });
     }
 
+    // IBD boundary frame: the enclosing block drawn behind its parts
+    if (diagram.type === "ibd" && diagram.blockId) {
+      const b = Model.elementById(model, diagram.blockId);
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      for (const [, a] of absById) { minX = Math.min(minX, a.x); minY = Math.min(minY, a.y); maxX = Math.max(maxX, a.x + a.w); maxY = Math.max(maxY, a.y + a.h); }
+      if (!isFinite(minX)) { minX = 40; minY = 48; maxX = 260; maxY = 170; }
+      const pad = 28, fx = minX - pad, fy = minY - pad, fw = (maxX - minX) + pad * 2, fh = (maxY - minY) + pad * 2;
+      const fg = el2("g", { class: "ibd-frame" });
+      fg.appendChild(el2("rect", { x: fx, y: fy, width: fw, height: fh, fill: "none", stroke: PAL.edge, "stroke-width": 1.4, rx: 4 }));
+      const label = "«block» " + ((b && b.name) || "");
+      const tabW = tw(label, F_STEREO) + 18;
+      fg.appendChild(el2("rect", { x: fx, y: fy - 20, width: tabW, height: 20, fill: PAL.canvas, stroke: PAL.edge, "stroke-width": 1.4 }));
+      fg.appendChild(text(fx + 9, fy - 6, label, { "font-style": "italic", "font-size": 12, fill: PAL.edgeText }));
+      nodeLayer.insertBefore(fg, nodeLayer.firstChild);
+    }
+
     // edges (absolute)
     const hidden = new Set(diagram.hidden || []);
     for (const rel of model.relationships) {
