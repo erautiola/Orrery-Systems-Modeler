@@ -104,6 +104,28 @@ test("createIbdFromBlock reuses existing owned parts instead of duplicating", ()
   assert.equal(d.nodes[0].elementId, existing.id);
 });
 
+test("blockPorts lists boundary ports and ports nested on the block's parts", () => {
+  const { m, car } = carModel();
+  // a boundary port on the Car block
+  const bp = Model.newElement("port"); bp.name = "power"; bp.ownerId = car.id;
+  // a part owned by Car, with a port on it
+  const part = Model.newElement("part"); part.name = "enginePart"; part.ownerId = car.id;
+  const np = Model.newElement("port"); np.name = "fuelIn"; np.ownerId = part.id;
+  // an unrelated free port (should not appear)
+  const free = Model.newElement("port"); free.name = "loose"; free.ownerId = null;
+  m.elements.push(bp, part, np, free);
+
+  const ports = Model.blockPorts(m, car.id);
+  assert.equal(ports.length, 2);
+  const boundary = ports.find((p) => p.scope === "boundary");
+  const nested = ports.find((p) => p.scope === "part");
+  assert.equal(boundary.name, "power");
+  assert.equal(boundary.onId, car.id);
+  assert.equal(nested.name, "fuelIn");
+  assert.equal(nested.onName, "enginePart");
+  assert.ok(!ports.some((p) => p.name === "loose"), "free port excluded");
+});
+
 test("boundaryBand detects the frame-edge band (for boundary ports)", () => {
   const r = { x: 100, y: 100, w: 200, h: 120 }; // 100..300 x, 100..220 y
   const m = 26;

@@ -101,7 +101,9 @@ boundary** (which lists the parts and, on a block‑framed IBD, the enclosing bl
 Connect ports with a **Connector**, or an **Item Flow** and set its **item name /
 type** — the flow renders as `«flow» item : Type` with a directional arrow.
 Parts imported from a block stay owned by it — moving them around the IBD keeps
-them inside the block.
+them inside the block. **Selecting a block** (in a BDD or the Model Explorer)
+lists its **Parts** and its **Ports** (boundary and nested) in Properties; click a
+row to locate that part or port on a diagram.
 
 ### Parametric (SysML)
 Place a **Constraint** (set its `{expression}` and list its **parameters** in

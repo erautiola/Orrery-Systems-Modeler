@@ -179,6 +179,13 @@ table.grid td.cellmark .mk { color: var(--accent); font-weight: 700; }
 .parts-row .pn { flex: 1; font-size: 13px; }
 .parts-row .src { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
 
+/* block Parts / Ports summary rows */
+.struct-row { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-radius: 6px; font-size: 12px; }
+.struct-row .sn { flex: 1; }
+.struct-row .src { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.struct-row.nav { cursor: pointer; }
+.struct-row.nav:hover { background: var(--panel-2); }
+
 /* right-click context menu */
 .ctx-menu { position: fixed; z-index: 200; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 5px; min-width: 190px; box-shadow: 0 8px 24px rgba(0,0,0,.45); }
 .ctx-item { padding: 8px 10px; border-radius: 5px; cursor: pointer; font-size: 13px; color: var(--text); white-space: nowrap; }

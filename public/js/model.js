@@ -344,6 +344,25 @@
     return rows;
   }
 
+  // Enumerate the ports associated with a block: those on its own boundary
+  // (port.ownerId === blockId) and those nested on the block's owned parts.
+  // Returns { portId, name, scope:'boundary'|'part', onId, onName }.
+  function blockPorts(model, blockId) {
+    const out = [];
+    const ports = (model.elements || []).filter((e) => e.type === "port");
+    for (const p of ports) {
+      if (p.ownerId === blockId) out.push({ portId: p.id, name: p.name || "", scope: "boundary", onId: blockId, onName: "" });
+    }
+    const partIds = new Set((model.elements || []).filter((e) => e.type === "part" && e.ownerId === blockId).map((e) => e.id));
+    for (const p of ports) {
+      if (partIds.has(p.ownerId)) {
+        const owner = elementById(model, p.ownerId);
+        out.push({ portId: p.id, name: p.name || "", scope: "part", onId: p.ownerId, onName: owner ? owner.name : "" });
+      }
+    }
+    return out;
+  }
+
   // Build an IBD for `block`, importing the chosen candidate rows (from
   // blockParts). Mutates `model` (adds a diagram, and any new part elements)
   // and returns the new diagram. `chosen` is an array of blockParts rows.
@@ -406,7 +425,7 @@
     uid, ELEMENTS, RELATIONSHIPS, DIAGRAMS, VISIBILITIES, TABLES,
     newModel, newElement, newAttribute, newOperation, newRelationship, newDiagram, newTable, newColumn,
     elementById, relsTouching, removeElement, removeRelationship, stereoText, transitionLabel, messageLabel, commLabel,
-    portLabel, flowLabel, blockParts, createIbdFromBlock, boundaryBand,
+    portLabel, flowLabel, blockParts, blockPorts, createIbdFromBlock, boundaryBand,
   };
   if (typeof module !== "undefined" && module.exports) module.exports = api; // Node (tests)
   if (root) root.Model = api;                                                // browser

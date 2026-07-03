@@ -6,6 +6,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- **Block structure in Properties.** Selecting a block now lists its **Parts**
+  (its composition/aggregation part‑properties and any parts it owns, as
+  `role : Type [mult]`) and its **Ports** (both on the block boundary and nested
+  on its parts). Each row is **click‑to‑locate** on a diagram. New pure
+  `Model.blockPorts` (unit‑tested).
 - **Create an IBD from a block**
   ([#34](https://github.com/erautiola/Orrery-Systems-Modeler/issues/34)).
   Right‑click a block (canvas or Model Explorer) or use **⊞ Create IBD from this
