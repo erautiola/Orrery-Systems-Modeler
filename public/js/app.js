@@ -618,6 +618,8 @@
     if (spec.compartments.includes("attributes")) attrSection(p, el);
     if (spec.compartments.includes("operations")) opSection(p, el);
 
+    if (el.type === "block") blockStructureSections(p, el);
+
     // relationships summary
     const rels = Model.relsTouching(S.model, el.id);
     if (rels.length) {
@@ -630,6 +632,35 @@
       p.appendChild(sec);
     }
     p.appendChild(deleteBtn("Delete element", () => S.editor.deleteSelection()));
+  }
+
+  // read-only Parts / Ports summaries for a block (click a row to locate it)
+  function blockStructureSections(p, el) {
+    const parts = Model.blockParts(S.model, el.id);
+    if (parts.length) {
+      const sec = h(`<div class="prop-section"><h4>Parts</h4></div>`);
+      for (const pt of parts) {
+        const label = pt.name + (pt.typeName ? " : " + pt.typeName : "") + (pt.mult ? " [" + pt.mult + "]" : "");
+        const targetId = pt.existingPartId || pt.typeId || null;
+        const row = h(`<div class="struct-row${targetId ? " nav" : ""}"><span class="sn">${esc(label)}</span><span class="src">${esc(pt.source)}</span></div>`);
+        if (targetId) row.addEventListener("click", () => navigateToRef({ kind: "element", id: targetId }));
+        sec.appendChild(row);
+      }
+      p.appendChild(sec);
+    }
+    const ports = Model.blockPorts(S.model, el.id);
+    if (ports.length) {
+      const sec = h(`<div class="prop-section"><h4>Ports</h4></div>`);
+      for (const pr of ports) {
+        const portEl = Model.elementById(S.model, pr.portId);
+        const label = (portEl && Model.portLabel(portEl)) || pr.name || "(unnamed)";
+        const where = pr.scope === "boundary" ? "boundary" : ("on " + pr.onName);
+        const row = h(`<div class="struct-row nav"><span class="sn">${esc(label)}</span><span class="src">${esc(where)}</span></div>`);
+        row.addEventListener("click", () => navigateToRef({ kind: "element", id: pr.portId }));
+        sec.appendChild(row);
+      }
+      p.appendChild(sec);
+    }
   }
 
   function attrSection(p, el) {
