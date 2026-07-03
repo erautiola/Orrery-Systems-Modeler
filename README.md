@@ -9,7 +9,7 @@
 
 [![CI](https://github.com/erautiola/Orrery-Systems-Modeler/actions/workflows/ci.yml/badge.svg)](https://github.com/erautiola/Orrery-Systems-Modeler/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/erautiola/Orrery-Systems-Modeler/actions/workflows/codeql.yml/badge.svg)](https://github.com/erautiola/Orrery-Systems-Modeler/actions/workflows/codeql.yml)
-![version](https://img.shields.io/badge/version-0.1.6-blue)
+![version](https://img.shields.io/badge/version-0.2.0-blue)
 
 A server-based, multi-user UML & SysML modeling tool. Runs as a small Node.js
 web server (packaged with Docker so it runs identically on Windows, Linux, Mac,
@@ -39,7 +39,7 @@ docker run -d -p 8080:8137 -v modeler-data:/data \
 docker compose -f docker-compose.ghcr.yml up -d
 ```
 
-Then open **http://localhost:8080**. Pin a version with a tag like `:0.1.6`
+Then open **http://localhost:8080**. Pin a version with a tag like `:0.2.0`
 instead of `:latest`. (Data persists in the `modeler-data` volume.)
 
 ## Desktop app (no browser, no Docker)
