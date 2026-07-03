@@ -862,7 +862,11 @@
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; a.click();
     URL.revokeObjectURL(a.href); status("Exported " + name);
   }
-  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+  // full HTML-entity encoder (covers &<>"'`/ so it's safe in any HTML context)
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"'`/]/g, (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;", "`": "&#96;", "/": "&#47;" }[c]));
+  }
   function h(html) { const d = document.createElement("div"); d.innerHTML = html.trim(); return d.firstChild; }
   function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
   function safe(s) { return String(s || "diagram").replace(/[^a-z0-9_-]+/gi, "_"); }

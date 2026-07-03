@@ -22,9 +22,22 @@ const store = new Store(DATA_DIR);
 const app = express();
 app.use(express.json({ limit: "32mb" }));
 
+// --- rate limiting (per IP) ----------------------------------------------
+const rateLimit = require("express-rate-limit");
+app.use(rateLimit({
+  windowMs: 60 * 1000,
+  max: Number(process.env.RATE_LIMIT_MAX) || 600, // requests / minute / IP
+  standardHeaders: true,
+  legacyHeaders: false,
+}));
+
 // --- tiny request logger -------------------------------------------------
 app.use((req, _res, next) => {
-  if (req.path.startsWith("/api")) console.log(`${req.method} ${req.path}`);
+  if (req.path.startsWith("/api")) {
+    // strip control chars so a crafted path can't forge log lines
+    const safePath = String(req.path).replace(/[^\x20-\x7E]/g, "");
+    console.log(`${req.method} ${safePath}`);
+  }
   next();
 });
 

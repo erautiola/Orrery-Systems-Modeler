@@ -76,7 +76,7 @@
     }
 
     const layers = { root, edgeLayer, nodeLayer, overlay, absById, containers: [] };
-    if (opts.selection) drawSelection(layers, opts.selection, lineById);
+    if (opts.selection) drawSelection(layers, opts.selection);
     return layers;
 
     function drawMessage(r, lineById) {

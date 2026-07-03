@@ -67,3 +67,12 @@ test("ids that look like path traversal are rejected", async () => {
   const s = await tmpStore();
   await assert.rejects(() => s.get("../../etc/passwd"));
 });
+
+test("_file resolves inside the data dir and rejects escaping ids", async () => {
+  const s = await tmpStore();
+  const dir = path.resolve(s.dir);
+  assert.equal(path.dirname(s._file("abc123")), dir);
+  assert.throws(() => s._file("../evil"), (e) => e.status === 400);
+  assert.throws(() => s._file("a/b"), (e) => e.status === 400);
+  assert.throws(() => s._file("."), (e) => e.status === 400);
+});

@@ -113,7 +113,7 @@
     }
     function multXml(m, ind) {
       if (!m) return "";
-      let lo = "0", hi = "1";
+      let lo, hi;
       if (m === "*") { lo = "0"; hi = "*"; }
       else if (m.includes("..")) { [lo, hi] = m.split(".."); }
       else { lo = hi = m; }

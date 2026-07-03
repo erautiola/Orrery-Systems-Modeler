@@ -3,6 +3,15 @@
 All notable changes to Orrery Systems Modeler are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Security
+- Resolved all CodeQL code-scanning findings: explicit path-containment check in
+  the project store (path-injection / untrusted file write), control-char
+  stripping on logged request paths (log-injection), per-IP **rate limiting** on
+  the API (`express-rate-limit`), a fuller HTML-entity encoder for UI text, and a
+  few code-quality cleanups.
+
 ## [0.1.6] - 2026-07-01
 
 ### Added
