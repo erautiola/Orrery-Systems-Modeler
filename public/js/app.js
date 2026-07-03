@@ -12,6 +12,9 @@
     model: null,
     diagram: null,
     table: null,
+    tabs: [],        // open views: [{ kind:'diagram'|'table', id }]
+    active: null,    // the currently-shown tab
+    viewByTab: {},   // remembered pan/zoom per diagram tab, keyed "diagram:id"
     dirty: false,
     editor: null,
     hist: History.createHistory(100),
@@ -64,17 +67,17 @@
   function redo() { const s = S.hist.redo(); if (s) restoreSnapshot(s); }
   function restoreSnapshot(snap) {
     S.restoring = true;
-    const diagId = S.diagram && S.diagram.id, tableId = S.table && S.table.id, wasTable = !!S.table;
+    const activeId = S.active && S.active.id, activeKind = S.active && S.active.kind;
     S.model = (function () { try { return structuredClone(snap); } catch (e) { return JSON.parse(JSON.stringify(snap)); } })();
     S.editor.setModel(S.model);
+    // drop tabs whose diagram/table no longer exists after the undo/redo
+    S.tabs = Tabs.prune(S.tabs, (kind, id) =>
+      kind === "diagram" ? S.model.diagrams.some((d) => d.id === id) : S.model.tables.some((t) => t.id === id));
     renderDiagramList(); renderTableList(); renderTree();
-    if (wasTable) {
-      const t = S.model.tables.find((x) => x.id === tableId);
-      if (t) selectTable(t); else loadFirstDiagram();
-    } else {
-      const d = S.model.diagrams.find((x) => x.id === diagId) || S.model.diagrams[0];
-      if (d) selectDiagram(d);
-    }
+    const stillActive = activeId && Tabs.has(S.tabs, { kind: activeKind, id: activeId });
+    if (stillActive) setActive({ kind: activeKind, id: activeId });
+    else if (S.tabs.length) setActive(S.tabs[0]);
+    else loadFirstDiagram();
     S.dirty = true; $("dirtyDot").hidden = false;
     S.restoring = false;
     updateHistoryButtons();
@@ -120,6 +123,7 @@
       S.project = { id: p.id, rev: p.rev, name: p.name };
       S.model = normalizeModel(p.model);
       S.editor.setModel(S.model);
+      S.tabs = []; S.viewByTab = {}; S.active = null;
       loadFirstDiagram();
       markDirty(false);
       resetHistory();
@@ -212,22 +216,73 @@
     if (!S.model.diagrams.length) S.model.diagrams.push(Model.newDiagram("class", "Main"));
     selectDiagram(S.model.diagrams[0]);
   }
-  function selectDiagram(d) {
-    S.diagram = d; S.table = null;
-    showDiagramView();
-    S.editor.setDiagram(d);
-    S.editor.fit();
-    renderDiagramList(); renderTableList();
-    renderPalette();
-    renderProps(null);
+  // open (or focus) a diagram/table in its own tab, and make it active
+  function openView(kind, id) {
+    S.tabs = Tabs.add(S.tabs, { kind, id });
+    setActive({ kind, id });
   }
-  function showDiagramView() { svg.style.display = ""; $("tableView").hidden = true; document.querySelector(".zoom-controls").style.display = ""; }
-  function showTableView() { svg.style.display = "none"; $("tableView").hidden = false; document.querySelector(".zoom-controls").style.display = "none"; $("toolHint").classList.remove("show"); }
+  function selectDiagram(d) { if (d) openView("diagram", d.id); }
+  function selectTable(t) { if (t) openView("table", t.id); }
+
+  // make a tab the active view (renders its diagram or table); remembers the
+  // pan/zoom of the diagram we're leaving so switching back is stable
+  function setActive(tab) {
+    if (S.active && S.active.kind === "diagram") S.viewByTab["diagram:" + S.active.id] = S.editor.getView();
+    S.active = tab ? { kind: tab.kind, id: tab.id } : null;
+    if (!tab) { S.diagram = null; S.table = null; showEmptyView(); renderViewTabs(); renderDiagramList(); renderTableList(); return; }
+    if (tab.kind === "diagram") {
+      const d = S.model.diagrams.find((x) => x.id === tab.id);
+      S.diagram = d; S.table = null;
+      showDiagramView();
+      S.editor.setDiagram(d);
+      const saved = S.viewByTab["diagram:" + d.id];
+      if (saved) S.editor.setView(saved); else S.editor.fit();
+      renderPalette();
+    } else {
+      const t = S.model.tables.find((x) => x.id === tab.id);
+      S.table = t; S.diagram = null;
+      showTableView(); renderTable(t);
+    }
+    renderViewTabs(); renderDiagramList(); renderTableList(); renderProps(null);
+  }
+  // close a tab; activate a neighbour (or clear the view when none remain)
+  function closeView(tab) {
+    const nextTab = Tabs.same(S.active, tab) ? Tabs.next(S.tabs, tab) : S.active;
+    S.tabs = Tabs.remove(S.tabs, tab);
+    delete S.viewByTab[tab.kind + ":" + tab.id];
+    if (Tabs.same(S.active, tab)) setActive(nextTab);
+    else { renderViewTabs(); renderDiagramList(); renderTableList(); }
+  }
+  function renderViewTabs() {
+    const bar = $("viewTabs"); bar.innerHTML = ""; bar.hidden = !S.tabs.length;
+    for (const tab of S.tabs) {
+      let abbr = "", name = "(gone)";
+      if (tab.kind === "diagram") { const d = S.model.diagrams.find((x) => x.id === tab.id); if (d) { abbr = (Model.DIAGRAMS[d.type] || {}).abbr || d.type; name = d.name; } }
+      else { const t = S.model.tables.find((x) => x.id === tab.id); if (t) { abbr = t.kind === "matrix" ? "mtx" : "tbl"; name = t.name; } }
+      const el = document.createElement("div");
+      el.className = "view-tab" + (Tabs.same(S.active, tab) ? " active" : "");
+      el.innerHTML = `<span class="tabbr">${esc(abbr)}</span><span class="tnm">${esc(name)}</span><button class="tx" title="Close">✕</button>`;
+      el.addEventListener("click", (e) => {
+        if (e.target.classList.contains("tx")) { e.stopPropagation(); closeView(tab); return; }
+        setActive(tab);
+      });
+      bar.appendChild(el);
+    }
+  }
+  // sidebar tabs: Diagrams / Tables / Explorer
+  function setSideTab(name) {
+    document.querySelectorAll(".side-tab").forEach((b) => b.classList.toggle("active", b.dataset.side === name));
+    document.querySelectorAll(".side-pane").forEach((p) => { p.hidden = p.dataset.pane !== name; });
+  }
+  function showDiagramView() { svg.style.display = ""; $("tableView").hidden = true; $("canvasHint").style.display = "none"; document.querySelector(".zoom-controls").style.display = ""; }
+  function showTableView() { svg.style.display = "none"; $("tableView").hidden = false; $("canvasHint").style.display = "none"; document.querySelector(".zoom-controls").style.display = "none"; $("toolHint").classList.remove("show"); }
+  function showEmptyView() { svg.style.display = "none"; $("tableView").hidden = true; document.querySelector(".zoom-controls").style.display = "none"; $("canvasHint").style.display = ""; }
   function renderDiagramList() {
     const list = $("diagramList"); list.innerHTML = "";
     for (const d of (S.model ? S.model.diagrams : [])) {
       const item = document.createElement("div");
-      item.className = "diagram-item" + (S.diagram === d ? " active" : "");
+      const isOpen = Tabs.has(S.tabs, { kind: "diagram", id: d.id });
+      item.className = "diagram-item" + (S.diagram === d ? " active" : "") + (isOpen ? " open" : "");
       const spec = Model.DIAGRAMS[d.type] || {};
       item.innerHTML = `<span class="abbr">${esc(spec.abbr || d.type)}</span><span class="nm">${esc(d.name)}</span><span class="x" title="Delete">✕</span>`;
       item.addEventListener("click", (e) => {
@@ -236,8 +291,9 @@
           if (S.model.diagrams.length <= 1) return status("Keep at least one diagram.", true);
           if (!confirm("Delete diagram “" + d.name + "”? (Elements stay in the model.)")) return;
           S.model.diagrams = S.model.diagrams.filter((x) => x !== d);
-          markDirty(true);
-          if (S.diagram === d) selectDiagram(S.model.diagrams[0]); else renderDiagramList();
+          closeView({ kind: "diagram", id: d.id });
+          if (!S.tabs.length && S.model.diagrams.length) selectDiagram(S.model.diagrams[0]);
+          markDirty(true); renderDiagramList();
           return;
         }
         selectDiagram(d);
@@ -375,15 +431,18 @@
     const list = $("tableList"); list.innerHTML = "";
     for (const t of (S.model ? S.model.tables : [])) {
       const item = document.createElement("div");
-      item.className = "diagram-item" + (S.table === t ? " active" : "");
+      const isOpen = Tabs.has(S.tabs, { kind: "table", id: t.id });
+      item.className = "diagram-item" + (S.table === t ? " active" : "") + (isOpen ? " open" : "");
       const abbr = t.kind === "matrix" ? "mtx" : "tbl";
       item.innerHTML = `<span class="abbr">${abbr}</span><span class="nm">${esc(t.name)}</span><span class="x" title="Delete">✕</span>`;
       item.addEventListener("click", (e) => {
         if (e.target.classList.contains("x")) {
           e.stopPropagation();
           if (!confirm("Delete table “" + t.name + "”? (Model elements are kept.)")) return;
-          S.model.tables = S.model.tables.filter((x) => x !== t); markDirty(true);
-          if (S.table === t) { S.table = null; loadFirstDiagram(); } else renderTableList();
+          S.model.tables = S.model.tables.filter((x) => x !== t);
+          closeView({ kind: "table", id: t.id });
+          if (!S.tabs.length) loadFirstDiagram();
+          markDirty(true); renderTableList();
           return;
         }
         selectTable(t);
@@ -404,12 +463,6 @@
       const t = Model.newTable(kind, name); S.model.tables.push(t); markDirty(true); closeModal(); selectTable(t);
     });
     m.querySelector("#tbName").select();
-  }
-  function selectTable(t) {
-    S.table = t; S.diagram = null;
-    showTableView(); renderTableList(); renderDiagramList(); renderProps(null);
-    renderTable(t);
-    status(`Table “${t.name}”.`);
   }
 
   function elementsForTable(typeFilter) {
@@ -904,12 +957,14 @@
     const row = document.createElement("div"); row.className = "row"; row.dataset.id = e.id;
     row.innerHTML = `<span class="ico">${glyph(e.type)}</span><span>${esc(e.name)}</span>`;
     row.addEventListener("click", () => {
-      const onDiagram = S.diagram.nodes.some((n) => n.elementId === e.id);
-      if (onDiagram) { S.editor.reselect({ kind: "element", id: e.id }); S.editor.centerOn(e.id); }
-      else if (confirm("“" + e.name + "” is not on this diagram. Add it here?")) {
-        const sz = Renderer.computeSize(e);
-        S.diagram.nodes.push({ elementId: e.id, x: 80, y: 80, w: sz.w, h: sz.h });
-        markDirty(true); S.editor.reselect({ kind: "element", id: e.id });
+      // always populate Properties; if the element is placed on a diagram, focus
+      // it there (the current one if possible, else open one that shows it)
+      if (S.diagram && S.diagram.nodes.some((n) => n.elementId === e.id)) {
+        S.editor.reselect({ kind: "element", id: e.id }); S.editor.centerOn(e.id);
+      } else {
+        const other = S.model.diagrams.find((d) => d.nodes.some((n) => n.elementId === e.id));
+        if (other) { selectDiagram(other); S.editor.reselect({ kind: "element", id: e.id }); S.editor.centerOn(e.id); }
+        else { S.editor.reselect({ kind: "element", id: e.id }); } // not on any diagram — just show its Properties
       }
     });
     const items = elementMenuItems(e);
@@ -1035,6 +1090,7 @@
   $("saveBtn").addEventListener("click", save);
   $("addDiagramBtn").addEventListener("click", addDiagram);
   $("addTableBtn").addEventListener("click", addTable);
+  $("sideTabs").addEventListener("click", (e) => { const b = e.target.closest(".side-tab"); if (b) setSideTab(b.dataset.side); });
   $("undoBtn").addEventListener("click", undo);
   $("redoBtn").addEventListener("click", redo);
   $("validateBtn").addEventListener("click", runValidation);
