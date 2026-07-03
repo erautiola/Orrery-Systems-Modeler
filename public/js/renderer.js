@@ -403,6 +403,7 @@
   // ---- ports (SysML IBD) -------------------------------------------------
   function drawPort(el, cx, cy, edge) {
     const g = el2("g", { class: "uml-node", "data-id": el.id, transform: `translate(${cx},${cy})` });
+    g.appendChild(el2("rect", { x: -12, y: -12, width: 24, height: 24, fill: "transparent" })); // easier click target
     g.appendChild(el2("rect", { class: "node-bg", x: -8, y: -8, width: 16, height: 16, fill: "#e8f0ff", stroke: "#3a4a6b", "stroke-width": 1.3 }));
     const nrm = ({ right: [1, 0], left: [-1, 0], top: [0, -1], bottom: [0, 1] })[edge] || [1, 0];
     if (el.direction === "in" || el.direction === "out") { // flow-direction triangle
@@ -592,7 +593,26 @@
     }
     roots.forEach((e) => draw(e, 0, 0, nodeLayer));
 
-    // ports: snap to owner border (owner abs is known now), else free-floating
+    // IBD boundary frame: the enclosing block, drawn behind its parts. Computed
+    // from the part geometry (before ports) and registered in absById so that
+    // block-owned ports snap to the boundary just like part-owned ports do.
+    if (diagram.type === "ibd" && diagram.blockId) {
+      const b = Model.elementById(model, diagram.blockId);
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      for (const [, a] of absById) { minX = Math.min(minX, a.x); minY = Math.min(minY, a.y); maxX = Math.max(maxX, a.x + a.w); maxY = Math.max(maxY, a.y + a.h); }
+      if (!isFinite(minX)) { minX = 40; minY = 48; maxX = 260; maxY = 170; }
+      const pad = 28, fx = minX - pad, fy = minY - pad, fw = (maxX - minX) + pad * 2, fh = (maxY - minY) + pad * 2;
+      absById.set(diagram.blockId, { x: fx, y: fy, w: fw, h: fh });
+      const fg = el2("g", { class: "ibd-frame", "data-id": diagram.blockId });
+      fg.appendChild(el2("rect", { x: fx, y: fy, width: fw, height: fh, fill: "none", stroke: PAL.edge, "stroke-width": 1.4, rx: 4 }));
+      const label = "«block» " + ((b && b.name) || "");
+      const tabW = tw(label, F_STEREO) + 18;
+      fg.appendChild(el2("rect", { x: fx, y: fy - 20, width: tabW, height: 20, fill: PAL.canvas, stroke: PAL.edge, "stroke-width": 1.4 }));
+      fg.appendChild(text(fx + 9, fy - 6, label, { "font-style": "italic", "font-size": 12, fill: PAL.edgeText }));
+      nodeLayer.insertBefore(fg, nodeLayer.firstChild);
+    }
+
+    // ports: snap to owner border (part OR block boundary), else free-floating
     for (const e of ports) {
       const sz = computeSize(e.el); e.node.w = sz.w; e.node.h = sz.h;
       const owner = e.el.ownerId && absById.get(e.el.ownerId);
@@ -601,22 +621,6 @@
       else { cx = e.node.x + sz.w / 2; cy = e.node.y + sz.h / 2; edge = "right"; }
       nodeLayer.appendChild(drawPort(e.el, cx, cy, edge));
       absById.set(e.el.id, { x: cx - sz.w / 2, y: cy - sz.h / 2, w: sz.w, h: sz.h });
-    }
-
-    // IBD boundary frame: the enclosing block drawn behind its parts
-    if (diagram.type === "ibd" && diagram.blockId) {
-      const b = Model.elementById(model, diagram.blockId);
-      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-      for (const [, a] of absById) { minX = Math.min(minX, a.x); minY = Math.min(minY, a.y); maxX = Math.max(maxX, a.x + a.w); maxY = Math.max(maxY, a.y + a.h); }
-      if (!isFinite(minX)) { minX = 40; minY = 48; maxX = 260; maxY = 170; }
-      const pad = 28, fx = minX - pad, fy = minY - pad, fw = (maxX - minX) + pad * 2, fh = (maxY - minY) + pad * 2;
-      const fg = el2("g", { class: "ibd-frame" });
-      fg.appendChild(el2("rect", { x: fx, y: fy, width: fw, height: fh, fill: "none", stroke: PAL.edge, "stroke-width": 1.4, rx: 4 }));
-      const label = "«block» " + ((b && b.name) || "");
-      const tabW = tw(label, F_STEREO) + 18;
-      fg.appendChild(el2("rect", { x: fx, y: fy - 20, width: tabW, height: 20, fill: PAL.canvas, stroke: PAL.edge, "stroke-width": 1.4 }));
-      fg.appendChild(text(fx + 9, fy - 6, label, { "font-style": "italic", "font-size": 12, fill: PAL.edgeText }));
-      nodeLayer.insertBefore(fg, nodeLayer.firstChild);
     }
 
     // edges (absolute)

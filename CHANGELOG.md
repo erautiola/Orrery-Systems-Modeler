@@ -18,6 +18,12 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   menu.
 
 ### Fixed
+- **IBD ports & parts.** Ports can now attach to the **block boundary frame** of an
+  IBD (drop one on the frame edge, or pick the block under *On part / boundary*) —
+  previously a port meant for the enclosing block landed loose inside it. Parts
+  imported from a block also **stay owned by that block** when moved; dragging one
+  no longer detaches it from the block (it was falling out to the model root).
+  Port hit‑target enlarged for easier selection.
 - **Long element names now wrap** inside their box instead of overflowing the
   edges ([#33](https://github.com/erautiola/Orrery-Systems-Modeler/issues/33)).
   Names are word-wrapped (with hard-breaking for a single over-long word) and the

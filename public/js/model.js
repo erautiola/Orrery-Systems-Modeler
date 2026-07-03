@@ -298,6 +298,16 @@
   // lower-case the first letter (a block "Wheel" -> a part named "wheel")
   function lowerFirst(s) { return s ? s.charAt(0).toLowerCase() + s.slice(1) : s; }
 
+  // True when (px,py) lies within `margin` of rectangle r's perimeter — i.e. in
+  // the band straddling the border. Used to attach an IBD port to the block
+  // boundary frame when it is dropped on/near the frame edge (vs. deep inside).
+  function boundaryBand(px, py, r, margin) {
+    const m = margin == null ? 26 : margin;
+    const outer = px >= r.x - m && px <= r.x + r.w + m && py >= r.y - m && py <= r.y + r.h + m;
+    const inner = px >= r.x + m && px <= r.x + r.w - m && py >= r.y + m && py <= r.y + r.h - m;
+    return outer && !inner;
+  }
+
   // Enumerate the candidate parts of a block, so a caller can offer them for
   // import into an IBD. Sources, in order:
   //   - composition / aggregation relationships whose whole end is the block
@@ -396,7 +406,7 @@
     uid, ELEMENTS, RELATIONSHIPS, DIAGRAMS, VISIBILITIES, TABLES,
     newModel, newElement, newAttribute, newOperation, newRelationship, newDiagram, newTable, newColumn,
     elementById, relsTouching, removeElement, removeRelationship, stereoText, transitionLabel, messageLabel, commLabel,
-    portLabel, flowLabel, blockParts, createIbdFromBlock,
+    portLabel, flowLabel, blockParts, createIbdFromBlock, boundaryBand,
   };
   if (typeof module !== "undefined" && module.exports) module.exports = api; // Node (tests)
   if (root) root.Model = api;                                                // browser

@@ -178,9 +178,9 @@
       while (state.model.elements.some((e) => e.name === name)) name = base + (++i);
       el.name = name;
       if (el.type === "port") {
-        // ports attach to the part they're dropped on (rendered on its border)
-        const part = partAt(x, y);
-        el.ownerId = part ? part.id : null;
+        // ports attach to the part they're dropped on, or to the IBD block
+        // boundary if dropped on the frame edge (rendered on that border)
+        el.ownerId = portOwnerAt(x, y);
       } else {
         // drop inside a container? (composite state / package)
         const C = containerAt(x, y, el.type);
@@ -221,6 +221,23 @@
       }
       return null;
     }
+    // where a port should attach: a part under the point, else the IBD block
+    // boundary when the point is on/near the frame edge, else free-floating
+    function portOwnerAt(wx, wy) {
+      const part = partAt(wx, wy);
+      if (part) return part.id;
+      const d = state.diagram;
+      if (d && d.type === "ibd" && d.blockId) {
+        const fb = state.layers && state.layers.absById.get(d.blockId);
+        if (fb && Model.boundaryBand(wx, wy, fb)) return d.blockId;
+      }
+      return null;
+    }
+    // is `id` drawn as a container on the current diagram? (composite/pkg/lane)
+    function containerDrawn(id) {
+      const cs = (state.layers && state.layers.containers) || [];
+      return cs.some((c) => c.id === id);
+    }
     function canNest(parentEl, childType) {
       if (!parentEl) return false;
       if (parentEl.type === "state") return ["state", "initial", "final", "choice", "forkjoin", "junction", "history", "note"].includes(childType);
@@ -243,14 +260,21 @@
       const el = Model.elementById(state.model, d.id); if (!el) return;
       const newAbsX = d.ax0 + (d.n.x - d.x0), newAbsY = d.ay0 + (d.n.y - d.y0);
       const cx = newAbsX + d.n.w / 2, cy = newAbsY + d.n.h / 2;
-      if (el.type === "port") { // attach to (or detach from) a part
-        const part = partAt(cx, cy);
-        el.ownerId = part ? part.id : null;
+      if (el.type === "port") { // attach to a part / the boundary, or detach
+        el.ownerId = portOwnerAt(cx, cy);
         return;
       }
       const C = containerAt(cx, cy, el.type, el.id);
       const newOwner = C ? C.id : null;
-      if (newOwner === (el.ownerId || null)) return; // unchanged
+      const curOwner = el.ownerId || null;
+      if (newOwner === curOwner) return; // unchanged
+      // Don't strip an owner that isn't drawn as a container on this diagram —
+      // e.g. an IBD part owned by the diagram's block (shown as a boundary
+      // frame). Just record the moved absolute position.
+      if (newOwner === null && curOwner && !containerDrawn(curOwner)) {
+        d.n.x = Math.round(newAbsX); d.n.y = Math.round(newAbsY);
+        return;
+      }
       el.ownerId = newOwner;
       if (C) { d.n.x = Math.round(newAbsX - C.cx); d.n.y = Math.round(newAbsY - C.cy); }
       else { d.n.x = Math.round(newAbsX); d.n.y = Math.round(newAbsY); }

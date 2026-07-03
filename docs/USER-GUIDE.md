@@ -93,11 +93,15 @@ typed part elements. Blocks with no parts still create an empty IBD you can fill
 in by hand.
 
 Place **Part** elements. Drop a **Port** onto a part — it **snaps to the part's
-border**. In the port's Properties set its **direction** (in / out / inout, shown
-as a small triangle), **flow type**, whether it's **conjugated** (`~`), or reassign
-it via **On part**. Connect ports with a **Connector**, or an **Item Flow** and set
-its **item name / type** — the flow renders as `«flow» item : Type` with a
-directional arrow.
+border**; drop it on the **block boundary frame** (the labelled rectangle of an
+IBD created from a block) and it snaps to that **boundary**. In the port's
+Properties set its **direction** (in / out / inout, shown as a small triangle),
+**flow type**, whether it's **conjugated** (`~`), or reassign it via **On part /
+boundary** (which lists the parts and, on a block‑framed IBD, the enclosing block).
+Connect ports with a **Connector**, or an **Item Flow** and set its **item name /
+type** — the flow renders as `«flow» item : Type` with a directional arrow.
+Parts imported from a block stay owned by it — moving them around the IBD keeps
+them inside the block.
 
 ### Parametric (SysML)
 Place a **Constraint** (set its `{expression}` and list its **parameters** in
