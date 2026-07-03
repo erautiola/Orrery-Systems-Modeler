@@ -5,6 +5,19 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- **Authentication (Phase 1 of the multi-user platform).** Optional local user
+  accounts with sign-in — passwords hashed with Node's built-in **scrypt** (no new
+  dependencies), server-side sessions in an HttpOnly cookie, and login rate-limit
+  + lockout after repeated failures. **Off by default** (existing installs are
+  unaffected); set **`AUTH_REQUIRED=1`** to require sign-in, and bootstrap the
+  first admin with **`ADMIN_USER` / `ADMIN_PASSWORD`**. When enabled, a login
+  screen gates the app and the API returns 401 without a session; a user chip +
+  Sign-out appear in the header. (Set `COOKIE_SECURE=1` behind HTTPS.) User and
+  session data live in `<DATA_DIR>/.auth/`, separate from the project library.
+  Roles/permissions, the admin page, CM, and licensing follow in later phases —
+  see [`docs/multi-user-platform-roadmap.md`](docs/multi-user-platform-roadmap.md).
+
 ## [0.2.0] - 2026-07-03
 
 ### Added

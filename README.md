@@ -42,6 +42,23 @@ docker compose -f docker-compose.ghcr.yml up -d
 Then open **http://localhost:8080**. Pin a version with a tag like `:0.2.0`
 instead of `:latest`. (Data persists in the `modeler-data` volume.)
 
+## Authentication (optional)
+
+Sign-in is **off by default** — the app is open, exactly as before. To require
+accounts, set `AUTH_REQUIRED=1` and bootstrap the first admin:
+
+```bash
+docker run -d -p 8080:8137 -v modeler-data:/data \
+  -e AUTH_REQUIRED=1 -e ADMIN_USER=admin -e ADMIN_PASSWORD='choose-a-strong-one' \
+  -e COOKIE_SECURE=1 \
+  ghcr.io/erautiola/orrery-systems-modeler:latest
+```
+
+Passwords are stored as scrypt hashes; sessions are server-side in an HttpOnly
+cookie. Set `COOKIE_SECURE=1` when served over HTTPS. Accounts/sessions live in
+`<data>/.auth/`. Roles, an admin page, project CM, and licensing are on the
+[roadmap](docs/multi-user-platform-roadmap.md).
+
 ## Desktop app (no browser, no Docker)
 
 Prebuilt **standalone installers** (Windows `.exe`, macOS `.dmg`, Linux

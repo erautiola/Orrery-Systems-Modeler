@@ -26,6 +26,7 @@
     </div>
 
     <div class="actions">
+      <span class="user-chip" id="userChip" hidden><span class="uname" id="userName"></span><button class="btn" id="logoutBtn" title="Sign out">Sign out</button></span>
       <button class="btn" id="undoBtn" title="Undo (Ctrl+Z)" aria-label="Undo" disabled>↶</button>
       <button class="btn" id="redoBtn" title="Redo (Ctrl+Y)" aria-label="Redo" disabled>↷</button>
       <span class="sep"></span>
@@ -116,6 +117,19 @@
 
   <!-- modal host -->
   <div id="modalRoot" class="modal-root" hidden></div>
+
+  <!-- login screen (shown only when auth is required and no one is signed in) -->
+  <div id="loginScreen" class="login-screen" hidden>
+    <form class="login-card" id="loginForm">
+      <img class="login-mark" src="assets/orrery_mark.svg" alt="" />
+      <h2>Sign in</h2>
+      <p class="login-sub">Orrery Systems Modeler</p>
+      <label>Username<input type="text" id="loginUser" autocomplete="username" autofocus></label>
+      <label>Password<input type="password" id="loginPass" autocomplete="current-password"></label>
+      <div class="login-err" id="loginErr" hidden></div>
+      <button type="submit" class="btn primary" id="loginBtn">Sign in</button>
+    </form>
+  </div>
 
   <script src="js/theme.js"></script>
   <script src="js/text-wrap.js"></script>

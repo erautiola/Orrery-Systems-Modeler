@@ -13,12 +13,23 @@
 const path = require("path");
 const express = require("express");
 const { Store } = require("./store");
+const { UserStore } = require("./users");
+const { SessionStore } = require("./sessions");
 
 const PORT = process.env.PORT || 8137;
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, "..", "data");
+const AUTH_DIR = path.join(DATA_DIR, ".auth"); // kept out of the project library
 const PUBLIC_DIR = path.join(__dirname, "..", "public");
 
+// Auth is OFF by default so existing single-team installs keep working on
+// upgrade. Set AUTH_REQUIRED=1 to require a login for the API.
+const AUTH_REQUIRED = process.env.AUTH_REQUIRED === "1";
+const COOKIE_SECURE = process.env.COOKIE_SECURE === "1"; // set behind HTTPS
+const SID = "osm_sid";
+
 const store = new Store(DATA_DIR);
+const users = new UserStore(AUTH_DIR);
+const sessions = new SessionStore(AUTH_DIR);
 const app = express();
 app.use(express.json({ limit: "32mb" }));
 
@@ -38,6 +49,61 @@ app.use((req, _res, next) => {
     const safePath = String(req.path).replace(/[\r\n]/g, "");
     console.log(`${req.method} ${safePath}`);
   }
+  next();
+});
+
+// --- authentication -------------------------------------------------------
+// read a single cookie by name — never writes a user-controlled value as an
+// object key, so there is no prototype-pollution surface
+function getCookie(req, name) {
+  for (const part of String(req.headers.cookie || "").split(";")) {
+    const i = part.indexOf("=");
+    if (i > 0 && part.slice(0, i).trim() === name) return decodeURIComponent(part.slice(i + 1).trim());
+  }
+  return null;
+}
+function setSid(res, id) {
+  res.setHeader("Set-Cookie", `${SID}=${id}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${7 * 24 * 3600}${COOKIE_SECURE ? "; Secure" : ""}`);
+}
+function clearSid(res) {
+  res.setHeader("Set-Cookie", `${SID}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0${COOKIE_SECURE ? "; Secure" : ""}`);
+}
+// resolve the current user from the session cookie (always runs)
+app.use((req, _res, next) => {
+  req.user = null;
+  const sid = getCookie(req, SID);
+  const sess = sid && sessions.get(sid);
+  if (sess) {
+    const u = users.byId(sess.userId);
+    if (u && u.status === "active") { req.user = users.pub(u); req._sid = sid; }
+  }
+  next();
+});
+
+// stricter limiter on login to slow credential-stuffing
+const loginLimiter = rateLimit({ windowMs: 60 * 1000, max: Number(process.env.LOGIN_RATE_MAX) || 20, standardHeaders: true, legacyHeaders: false });
+
+const auth = express.Router();
+auth.get("/me", (req, res) => res.json({ authRequired: AUTH_REQUIRED, user: req.user }));
+auth.post("/login", loginLimiter, wrap(async (req, res) => {
+  const { username, password } = req.body || {};
+  const user = await users.login(username, password);
+  const sid = await sessions.create(user.id);
+  setSid(res, sid);
+  res.json({ user });
+}));
+auth.post("/logout", wrap(async (req, res) => {
+  if (req._sid) await sessions.destroy(req._sid);
+  clearSid(res);
+  res.status(204).end();
+}));
+app.use("/api/auth", auth);
+
+// when auth is required, guard every other /api route
+app.use("/api", (req, res, next) => {
+  if (!AUTH_REQUIRED) return next();
+  if (req.path === "/health" || req.path.startsWith("/auth")) return next();
+  if (!req.user) return res.status(401).json({ error: "Authentication required" });
   next();
 });
 
@@ -96,11 +162,14 @@ function wrap(fn) {
 // that resolves once the server is accepting connections (handy for tests).
 async function start(port = PORT) {
   await store.init();
+  await users.init();
+  await sessions.init();
   return new Promise((resolve) => {
     const server = app.listen(port, () => {
       const addr = server.address();
       console.log(`Orrery Systems Modeler running on http://localhost:${addr.port}`);
       console.log(`Project library: ${DATA_DIR}`);
+      console.log(`Auth: ${AUTH_REQUIRED ? "required" : "open (set AUTH_REQUIRED=1 to enforce)"}`);
       resolve(server);
     });
   });
@@ -114,4 +183,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { app, store, start };
+module.exports = { app, store, users, sessions, start };
