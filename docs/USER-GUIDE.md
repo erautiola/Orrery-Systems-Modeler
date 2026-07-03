@@ -38,12 +38,25 @@ preference. Diagrams (including exported SVG colors on screen) follow the theme.
   conflict instead of overwriting a teammate).
 - **Export ▾** — XMI, SVG (current diagram), or model JSON.
 
+## Workspace layout
+
+The **left sidebar** has three tabs — **Diagrams**, **Tables** (tables &
+matrices), and **Explorer** (the model tree) — plus the palette for the active
+diagram. The main area shows **open views as tabs**: open several diagrams and
+tables at once and switch between them with the tab strip above the canvas; the
+✕ on a tab closes it (a dot marks which items are open in the sidebar lists).
+Each diagram tab remembers its own pan/zoom.
+
+**Model Explorer:** clicking an element **shows its Properties** and, if it's
+placed on a diagram, focuses it there (opening/switching to that diagram) — it no
+longer asks to drop it onto the current diagram.
+
 ## Diagrams
 
-Add with the **＋** beside *Diagrams*. Types: Class, Package, Component,
-SysML **BDD**, SysML **IBD**, **Requirement**, **Use Case**, **State Machine**,
-**Sequence**, **ER / Data Model**, **Activity**, **Parametric**, **Communication**,
-**Timing**.
+Add with **＋ New diagram** on the *Diagrams* tab. Types: Class, Package,
+Component, SysML **BDD**, SysML **IBD**, **Requirement**, **Use Case**, **State
+Machine**, **Sequence**, **ER / Data Model**, **Activity**, **Parametric**,
+**Communication**, **Timing**.
 
 - Pick an **element tool** in the palette, then click the canvas to place it.
 - Pick a **relationship tool**, then **drag from source to target**.

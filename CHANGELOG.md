@@ -6,6 +6,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- **Tabbed workspace.** Diagrams and tables now open as **tabs** — several can be
+  open at once and you switch between them with a tab strip above the canvas
+  (each diagram tab remembers its own pan/zoom). The left sidebar's **Diagrams**,
+  **Tables**, and **Explorer** are now **tabs** rather than stacked panels. New
+  pure `tabs.js` open‑tabs reducer with unit tests.
 - **Block structure in Properties.** Selecting a block now lists its **Parts**
   (its composition/aggregation part‑properties and any parts it owns, as
   `role : Type [mult]`) and its **Ports** (both on the block boundary and nested
@@ -21,6 +26,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   block as a **«block» boundary frame**. New pure `Model.blockParts` /
   `Model.createIbdFromBlock` (unit‑tested) and a lightweight right‑click context
   menu.
+
+### Changed
+- **Model Explorer** now **populates Properties** on click (and focuses the
+  element on a diagram if it's placed) instead of prompting to add it to the
+  current diagram.
 
 ### Fixed
 - **IBD ports & parts.** Ports can now attach to the **block boundary frame** of an
