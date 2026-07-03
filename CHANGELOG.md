@@ -6,6 +6,16 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- **Roles & per-project permissions (Phase 2 of the multi-user platform).**
+  When authentication is enabled, each project has an **owner** (its creator) and
+  a member list with **editor** / **viewer** roles; a global **admin** can access
+  everything. The server enforces read/write/manage on every project route (403
+  otherwise) and filters the project list to what you may see. Owners get a
+  **Share** dialog to grant teammates editor/viewer access; the UI reflects your
+  rights (a **View only** badge and a disabled Save for read-only projects).
+  Pre-existing (unowned) projects stay shared read/write for any signed-in user.
+  New pure `permissions.js` policy (`can` / `projectRole`), unit-tested. No change
+  when auth is off. See the [roadmap](docs/multi-user-platform-roadmap.md).
 - **Authentication (Phase 1 of the multi-user platform).** Optional local user
   accounts with sign-in — passwords hashed with Node's built-in **scrypt** (no new
   dependencies), server-side sessions in an HttpOnly cookie, and login rate-limit

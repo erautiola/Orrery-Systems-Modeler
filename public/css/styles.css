@@ -201,6 +201,14 @@ table.grid td.cellmark .mk { color: var(--accent); font-weight: 700; }
 .proj-row .trash { color: var(--bad); background: none; border: none; cursor: pointer; font-size: 15px; }
 .empty { color: var(--muted); text-align: center; padding: 24px; }
 
+/* permissions: read-only badge, share button + dialog */
+.ro-badge { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); border: 1px solid var(--border); border-radius: 5px; padding: 1px 6px; }
+.mini-btn { padding: 3px 9px; font-size: 12px; }
+.share-list { max-height: 300px; overflow: auto; }
+.share-row { display: flex; align-items: center; gap: 10px; padding: 6px 4px; }
+.share-row .su { flex: 1; font-size: 13px; }
+.share-row select { background: var(--panel); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 4px 6px; font-size: 12px; }
+
 /* auth: user chip + login screen */
 .user-chip { display: inline-flex; align-items: center; gap: 8px; margin-right: 4px; }
 .user-chip .uname { font-size: 13px; color: var(--muted); max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

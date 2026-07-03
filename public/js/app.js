@@ -8,7 +8,7 @@
   const svg = $("diagram");
 
   const S = {
-    project: null,   // { id, rev, name }
+    project: null,   // { id, rev, name, ownerId, members }
     model: null,
     diagram: null,
     table: null,
@@ -19,6 +19,9 @@
     editor: null,
     hist: History.createHistory(100),
     restoring: false,
+    user: null,       // signed-in user { id, username, role } or null
+    authRequired: false,
+    canWrite: true, canManage: true, // permissions on the current project
   };
   const CLASSIFIER_TYPES = ["class", "interface", "enumeration", "datatype", "primitive", "component",
     "block", "valueType", "constraint", "interfaceBlock", "actor", "usecase", "requirement", "instance", "part", "state"];
@@ -120,7 +123,7 @@
   async function openProject(id) {
     try {
       const p = await Api.get(id);
-      S.project = { id: p.id, rev: p.rev, name: p.name };
+      S.project = { id: p.id, rev: p.rev, name: p.name, ownerId: p.ownerId || null, members: p.members || [] };
       S.model = normalizeModel(p.model);
       S.editor.setModel(S.model);
       S.tabs = []; S.viewByTab = {}; S.active = null;
@@ -128,8 +131,9 @@
       markDirty(false);
       resetHistory();
       updateProjectBar();
+      permsRefresh();
       $("canvasHint").style.display = "none";
-      status(`Opened “${p.name}”.`);
+      status(`Opened “${p.name}”.` + (S.canWrite ? "" : " (view only)"));
       renderTree();
     } catch (e) { status("Open failed: " + e.message, true); }
   }
@@ -1221,8 +1225,48 @@
 
   // ---------------------------------------------------------------- auth
   function showUser(user) {
+    S.user = user;
     $("userChip").hidden = false;
     $("userName").textContent = user.username + (user.role === "admin" ? " · admin" : "");
+  }
+  // recompute the current user's rights on the open project and reflect them
+  function permsRefresh() {
+    const authOn = !!S.authRequired;
+    S.canWrite = !authOn || Permissions.can(S.user, "write", S.project);
+    S.canManage = !authOn || Permissions.can(S.user, "manage", S.project);
+    $("saveBtn").disabled = !!(S.project && !S.canWrite);
+    $("roBadge").hidden = !(S.project && !S.canWrite);
+    $("shareBtn").hidden = !(S.project && S.canManage);
+  }
+  // owner/admin: choose which users can access the project and at what level
+  async function shareProject() {
+    if (!S.project || !S.canManage) return;
+    let all = [];
+    try { all = await Api.users(); } catch (e) { return status("Couldn't load users: " + e.message, true); }
+    const ownerId = S.project.ownerId, members = S.project.members || [];
+    const roleOf = (uid) => { const m = members.find((x) => x.userId === uid); return m ? m.role : ""; };
+    const others = all.filter((u) => u.id !== ownerId);
+    const rows = others.length ? others.map((u) => {
+      const cur = roleOf(u.id), you = u.id === (S.user && S.user.id) ? " (you)" : "";
+      return `<div class="share-row"><span class="su">${esc(u.username)}${you}</span>
+        <select data-uid="${esc(u.id)}">
+          <option value="">No access</option>
+          <option value="editor"${cur === "editor" ? " selected" : ""}>Editor</option>
+          <option value="viewer"${cur === "viewer" ? " selected" : ""}>Viewer</option>
+        </select></div>`;
+    }).join("") : `<p class="muted">No other users to share with yet.</p>`;
+    const ownerName = (all.find((u) => u.id === ownerId) || {}).username || "you";
+    const body = `<p class="muted">Owner: <b>${esc(ownerName)}</b>. Choose who else can access “${esc(S.project.name)}”.</p><div class="share-list">${rows}</div>`;
+    const m = modal("Share project", body, [{ label: "Cancel", act: "close" }, { label: "Save", act: "ok", primary: true }]);
+    m.querySelector('[data-act="ok"]').addEventListener("click", async () => {
+      const newMembers = Array.from(m.querySelectorAll("select[data-uid]")).filter((s) => s.value).map((s) => ({ userId: s.dataset.uid, role: s.value }));
+      try {
+        const updated = await Api.setMembers(S.project.id, newMembers);
+        S.project.members = updated.members || newMembers;
+        permsRefresh(); closeModal();
+        status(`Sharing updated — ${newMembers.length} member${newMembers.length === 1 ? "" : "s"}.`);
+      } catch (e) { status("Share failed: " + e.message, true); }
+    });
   }
   function showLogin() {
     const screen = $("loginScreen"), form = $("loginForm"), err = $("loginErr");
@@ -1246,9 +1290,11 @@
   async function initAuth() {
     let info;
     try { info = await Api.me(); } catch (e) { info = { authRequired: false, user: null }; }
+    S.authRequired = !!info.authRequired;
     if (info.authRequired && !info.user) { showLogin(); return; } // gate the app on sign-in
     if (info.user) showUser(info.user);
     refreshConnection();
   }
+  $("shareBtn").addEventListener("click", shareProject);
   initAuth();
 })();
