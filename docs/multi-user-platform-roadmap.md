@@ -117,7 +117,7 @@ and seat counting all need "who is this user."
 - SPA: hide/disable actions the user can't perform; show role badges.
 - Pure, unit-testable `can(user, action, project)` policy function.
 
-### Phase 3 — Admin page
+### Phase 3 — Admin page  ✅ *shipped*
 - `/admin` (admins only): **add / remove / disable users**, reset passwords,
   set global role, assign project membership, view **seat usage (N of M)**,
   view **active sessions and live server instances**, and **license status**.

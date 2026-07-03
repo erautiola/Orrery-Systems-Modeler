@@ -52,7 +52,16 @@ class UserStore {
   // the shape safe to send to clients (no hash / lockout internals)
   pub(u) { return u && { id: u.id, username: u.username, role: u.role, status: u.status }; }
   list() { return this.users.map((u) => this.pub(u)); }
+  // richer shape for the admin page (still no password hash)
+  details() { return this.users.map((u) => ({ id: u.id, username: u.username, role: u.role, status: u.status, createdAt: u.createdAt, lastLoginAt: u.lastLoginAt })); }
   activeCount() { return this.users.filter((u) => u.status === "active").length; }
+  adminCount() { return this.users.filter((u) => u.role === "admin" && u.status === "active").length; }
+
+  async setRole(id, role) {
+    const u = this.byId(id); if (!u) throw httpError(404, "No such user");
+    u.role = role === "admin" ? "admin" : "user";
+    await this._save(); return this.pub(u);
+  }
 
   async create({ username, password, role }) {
     username = String(username || "").trim();

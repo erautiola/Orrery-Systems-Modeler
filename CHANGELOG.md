@@ -6,6 +6,13 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- **Admin page (Phase 3 of the multi-user platform).** Global admins get an
+  **Admin** button opening a user-management dialog: **add / delete / disable /
+  enable users**, **promote/demote** (admin ↔ user), and **reset passwords**, with
+  a user count (seat usage lands with licensing). Disabling a user or resetting
+  their password **revokes their active sessions**; the **last active admin can't
+  be removed** (demote/disable/delete are blocked). Admin actions are recorded to
+  an append-only `audit.log`. New admin API under `/api/admin/*` (admin-only).
 - **Roles & per-project permissions (Phase 2 of the multi-user platform).**
   When authentication is enabled, each project has an **owner** (its creator) and
   a member list with **editor** / **viewer** roles; a global **admin** can access

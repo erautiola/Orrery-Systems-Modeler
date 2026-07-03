@@ -29,5 +29,11 @@
     // users & sharing
     users: () => req("GET", "/api/users"),
     setMembers: (id, members) => req("PUT", "/api/projects/" + id + "/members", { members }),
+    // admin
+    adminUsers: () => req("GET", "/api/admin/users"),
+    adminCreateUser: (username, password, role) => req("POST", "/api/admin/users", { username, password, role }),
+    adminUpdateUser: (id, patch) => req("PATCH", "/api/admin/users/" + id, patch),
+    adminResetPassword: (id, password) => req("POST", "/api/admin/users/" + id + "/password", { password }),
+    adminDeleteUser: (id) => req("DELETE", "/api/admin/users/" + id),
   };
 })(window);

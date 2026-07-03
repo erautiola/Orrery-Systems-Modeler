@@ -1228,6 +1228,65 @@
     S.user = user;
     $("userChip").hidden = false;
     $("userName").textContent = user.username + (user.role === "admin" ? " · admin" : "");
+    $("adminBtn").hidden = user.role !== "admin";
+  }
+  // ---------------------------------------------------------------- admin
+  async function adminDialog() {
+    let data;
+    try { data = await Api.adminUsers(); } catch (e) { return status("Admin load failed: " + e.message, true); }
+    const rows = data.users.map((u) => `
+      <tr data-id="${esc(u.id)}">
+        <td>${esc(u.username)}</td><td>${esc(u.role)}</td>
+        <td><span class="ustatus ${u.status}">${esc(u.status)}</span></td>
+        <td>${u.lastLoginAt ? esc(fmtDate(u.lastLoginAt)) : "—"}</td>
+        <td class="admin-actions">
+          <button class="mini2" data-act="role">${u.role === "admin" ? "Make user" : "Make admin"}</button>
+          <button class="mini2" data-act="status">${u.status === "active" ? "Disable" : "Enable"}</button>
+          <button class="mini2" data-act="pw">Reset password</button>
+          <button class="mini2 del" data-act="del">Delete</button>
+        </td>
+      </tr>`).join("");
+    const seatTxt = data.seats && data.seats.max != null ? `${data.seats.used} / ${data.seats.max} seats` : `${data.users.length} user${data.users.length === 1 ? "" : "s"}`;
+    const body = `<div class="admin-head"><span>${esc(seatTxt)}</span><button class="btn mini-btn" id="adAddUser">＋ Add user</button></div>
+      <div class="admin-table-wrap"><table class="admin-table">
+        <thead><tr><th>User</th><th>Role</th><th>Status</th><th>Last sign-in</th><th></th></tr></thead>
+        <tbody>${rows}</tbody></table></div>`;
+    const m = modal("User administration", body, [{ label: "Close", act: "close" }]);
+    const refresh = () => { closeModal(); adminDialog(); };
+    const act = async (fn) => { try { await fn(); refresh(); } catch (e) { status(e.message, true); } };
+    m.querySelector("#adAddUser").addEventListener("click", () => addUserDialog(refresh));
+    m.querySelectorAll("tr[data-id]").forEach((tr) => {
+      const u = data.users.find((x) => x.id === tr.dataset.id);
+      tr.querySelector('[data-act="role"]').addEventListener("click", () => act(() => Api.adminUpdateUser(u.id, { role: u.role === "admin" ? "user" : "admin" })));
+      tr.querySelector('[data-act="status"]').addEventListener("click", () => act(() => Api.adminUpdateUser(u.id, { status: u.status === "active" ? "disabled" : "active" })));
+      tr.querySelector('[data-act="pw"]').addEventListener("click", () => resetPwDialog(u));
+      tr.querySelector('[data-act="del"]').addEventListener("click", () => { if (confirm(`Delete user “${u.username}”? This can't be undone.`)) act(() => Api.adminDeleteUser(u.id)); });
+    });
+  }
+  function addUserDialog(after) {
+    const body = `<div class="field"><label>Username</label><input type="text" id="auUser"></div>
+      <div class="field"><label>Password (min 8)</label><input type="password" id="auPass"></div>
+      <div class="field"><label>Role</label><select id="auRole"><option value="user">User</option><option value="admin">Admin</option></select></div>
+      <div class="login-err" id="auErr" hidden></div>`;
+    const m = modal("Add user", body, [{ label: "Cancel", act: "close" }, { label: "Create", act: "ok", primary: true }]);
+    m.querySelector('[data-act="ok"]').addEventListener("click", async () => {
+      const err = m.querySelector("#auErr"); err.hidden = true;
+      try {
+        await Api.adminCreateUser(m.querySelector("#auUser").value.trim(), m.querySelector("#auPass").value, m.querySelector("#auRole").value);
+        closeModal(); if (after) after();
+      } catch (e) { err.textContent = e.message; err.hidden = false; }
+    });
+    m.querySelector("#auUser").focus();
+  }
+  function resetPwDialog(u) {
+    const body = `<div class="field"><label>New password for “${esc(u.username)}” (min 8)</label><input type="password" id="rpPass"></div><div class="login-err" id="rpErr" hidden></div>`;
+    const m = modal("Reset password", body, [{ label: "Cancel", act: "close" }, { label: "Reset", act: "ok", primary: true }]);
+    m.querySelector('[data-act="ok"]').addEventListener("click", async () => {
+      const err = m.querySelector("#rpErr"); err.hidden = true;
+      try { await Api.adminResetPassword(u.id, m.querySelector("#rpPass").value); closeModal(); status(`Password reset for ${u.username}.`); }
+      catch (e) { err.textContent = e.message; err.hidden = false; }
+    });
+    m.querySelector("#rpPass").focus();
   }
   // recompute the current user's rights on the open project and reflect them
   function permsRefresh() {
@@ -1296,5 +1355,6 @@
     refreshConnection();
   }
   $("shareBtn").addEventListener("click", shareProject);
+  $("adminBtn").addEventListener("click", adminDialog);
   initAuth();
 })();
