@@ -186,6 +186,13 @@
            (el.type === "package" && hasKids) ||
            el.type === "partition";
   }
+  // Only these element types visually nest their owned children on a diagram.
+  // Ownership set elsewhere (e.g. an element dragged into a block in the Model
+  // Explorer) is logical only — a block/class renders as a plain box, so its
+  // children stay at their own positions rather than being drawn inside it.
+  function nestsChildren(el) {
+    return el.type === "package" || el.type === "partition" || el.type === "state";
+  }
   // where children start inside a container (relative to the container box)
   function contentOrigin(el, node) {
     if (el.type === "package") return { dx: 6, dy: 22 };
@@ -542,17 +549,20 @@
     // ports are drawn in their own pass (snapped to their owner's border), so
     // they are excluded from the generic containment graph.
     const ports = [...entryById.values()].filter((e) => e.el.type === "port");
+    // an element nests under its owner only if both are placed here AND the
+    // owner is a visual container (package / composite state / partition)
+    const nestsUnder = (e) => {
+      const owner = e.el.ownerId;
+      return owner && entryById.has(owner) && nestsChildren(entryById.get(owner).el);
+    };
     const kids = new Map();
     for (const e of entryById.values()) {
-      if (e.el.type === "port") continue;
+      if (e.el.type === "port" || !nestsUnder(e)) continue;
       const owner = e.el.ownerId;
-      if (owner && entryById.has(owner)) {
-        if (!kids.has(owner)) kids.set(owner, []);
-        kids.get(owner).push(e);
-      }
+      if (!kids.has(owner)) kids.set(owner, []);
+      kids.get(owner).push(e);
     }
-    const roots = [...entryById.values()].filter((e) =>
-      e.el.type !== "port" && !(e.el.ownerId && entryById.has(e.el.ownerId)));
+    const roots = [...entryById.values()].filter((e) => e.el.type !== "port" && !nestsUnder(e));
 
     // measure (post-order): leaves from content, containers grow to fit kids
     function measure(e) {

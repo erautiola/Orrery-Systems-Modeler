@@ -414,6 +414,27 @@
   function removeRelationship(model, id) {
     model.relationships = model.relationships.filter((r) => r.id !== id);
   }
+  // can `dragId` be re-parented under `targetId` (a package/classifier), or to
+  // the root when targetId is null? Used by the Model Explorer's drag-and-drop.
+  function canOwn(el) {
+    if (!el) return false;
+    const shape = (ELEMENTS[el.type] || {}).shape;
+    return el.type === "package" || shape === "classifier" || shape === "component";
+  }
+  function canReparent(model, dragId, targetId) {
+    if (!dragId || dragId === targetId) return false;
+    const drag = elementById(model, dragId);
+    if (!drag) return false;
+    if ((drag.ownerId || null) === (targetId || null)) return false; // no-op
+    if (targetId == null) return true;                               // drop on root = un-parent
+    const target = elementById(model, targetId);
+    if (!canOwn(target)) return false;
+    // reject cycles: target must not be dragId itself or inside dragId's subtree
+    for (let cur = target; cur; cur = cur.ownerId ? elementById(model, cur.ownerId) : null) {
+      if (cur.id === dragId) return false;
+    }
+    return true;
+  }
   function stereoText(el) {
     const list = el.stereotypes && el.stereotypes.length
       ? el.stereotypes
@@ -425,7 +446,7 @@
     uid, ELEMENTS, RELATIONSHIPS, DIAGRAMS, VISIBILITIES, TABLES,
     newModel, newElement, newAttribute, newOperation, newRelationship, newDiagram, newTable, newColumn,
     elementById, relsTouching, removeElement, removeRelationship, stereoText, transitionLabel, messageLabel, commLabel,
-    portLabel, flowLabel, blockParts, blockPorts, createIbdFromBlock, boundaryBand,
+    portLabel, flowLabel, blockParts, blockPorts, createIbdFromBlock, boundaryBand, canReparent,
   };
   if (typeof module !== "undefined" && module.exports) module.exports = api; // Node (tests)
   if (root) root.Model = api;                                                // browser

@@ -6,6 +6,14 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- **Drag-and-drop in the Model Explorer**
+  ([#43](https://github.com/erautiola/Orrery-Systems-Modeler/issues/43)). Drag a
+  tree row onto a **package** or **block** to re-parent it (move between packages,
+  add to a block); drop on empty tree space to move it back to the root. Cycles
+  are rejected. New pure `Model.canReparent` (unit‑tested). The renderer now only
+  visually nests children under real containers (package / composite state /
+  partition), so logical ownership on a block no longer jams its children inside
+  the block box.
 - **Tabbed workspace.** Diagrams and tables now open as **tabs** — several can be
   open at once and you switch between them with a tab strip above the canvas
   (each diagram tab remembers its own pan/zoom). The left sidebar's **Diagrams**,

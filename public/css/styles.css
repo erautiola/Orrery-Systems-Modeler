@@ -94,6 +94,8 @@ button, input, select, textarea { font-family: inherit; }
 .tree .row { display: flex; align-items: center; gap: 6px; padding: 3px 5px; border-radius: 5px; cursor: pointer; font-size: 13px; white-space: nowrap; }
 .tree .row:hover { background: var(--panel); }
 .tree .row.selected { background: var(--panel-2); color: #fff; }
+.tree .row.drop-target { outline: 2px solid var(--accent); outline-offset: -2px; background: var(--panel-2); }
+.tree .row[draggable="true"] { cursor: grab; }
 .tree .ico { width: 15px; text-align: center; font-size: 12px; }
 
 /* canvas */
