@@ -34,8 +34,8 @@ app.use(rateLimit({
 // --- tiny request logger -------------------------------------------------
 app.use((req, _res, next) => {
   if (req.path.startsWith("/api")) {
-    // strip control chars so a crafted path can't forge log lines
-    const safePath = String(req.path).replace(/[^\x20-\x7E]/g, "");
+    // strip newlines so a crafted path can't forge log lines
+    const safePath = String(req.path).replace(/[\r\n]/g, "");
     console.log(`${req.method} ${safePath}`);
   }
   next();
