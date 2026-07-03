@@ -13,8 +13,9 @@
 const path = require("path");
 const express = require("express");
 const { Store } = require("./store");
-const { UserStore } = require("./users");
+const { UserStore, httpError } = require("./users");
 const { SessionStore } = require("./sessions");
+const Permissions = require(path.join(__dirname, "..", "public", "js", "permissions.js"));
 
 const PORT = process.env.PORT || 8137;
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, "..", "data");
@@ -110,32 +111,58 @@ app.use("/api", (req, res, next) => {
 // --- API ------------------------------------------------------------------
 const api = express.Router();
 
+// per-project permission gate (only enforced when auth is required). Loads the
+// project (404 if missing) and stashes it on req for the handler to reuse.
+function requirePerm(action) {
+  return wrap(async (req, _res, next) => {
+    const project = await store.get(req.params.id); // throws 404 if absent
+    if (AUTH_REQUIRED && !Permissions.can(req.user, action, project)) throw httpError(403, "You don't have permission to do that");
+    req._project = project;
+    next();
+  });
+}
+
 api.get("/health", (_req, res) => res.json({ ok: true, time: Date.now() }));
 
-api.get("/projects", wrap(async (_req, res) => {
-  res.json(await store.list());
+// signed-in users may look up teammates (id + username only) to share projects
+api.get("/users", wrap(async (req, res) => {
+  res.json(users.list().map((u) => ({ id: u.id, username: u.username })));
+}));
+
+api.get("/projects", wrap(async (req, res) => {
+  let list = await store.list();
+  if (AUTH_REQUIRED) list = list.filter((p) => Permissions.can(req.user, "read", p));
+  res.json(list);
 }));
 
 api.post("/projects", wrap(async (req, res) => {
   const { name, model } = req.body || {};
-  const p = await store.create(name, model);
+  const p = await store.create(name, model, req.user && req.user.id); // creator becomes owner
   res.status(201).json(p);
 }));
 
-api.get("/projects/:id", wrap(async (req, res) => {
-  res.json(await store.get(req.params.id));
+api.get("/projects/:id", requirePerm("read"), wrap(async (req, res) => {
+  res.json(req._project);
 }));
 
-api.put("/projects/:id", wrap(async (req, res) => {
+api.put("/projects/:id", requirePerm("write"), wrap(async (req, res) => {
   const { name, model, rev } = req.body || {};
   res.json(await store.save(req.params.id, { name, model, rev }));
 }));
 
-api.patch("/projects/:id", wrap(async (req, res) => {
+api.patch("/projects/:id", requirePerm("manage"), wrap(async (req, res) => {
   res.json(await store.rename(req.params.id, (req.body || {}).name));
 }));
 
-api.delete("/projects/:id", wrap(async (req, res) => {
+// share: set the project's members (owner/admin only)
+api.put("/projects/:id/members", requirePerm("manage"), wrap(async (req, res) => {
+  const members = (((req.body || {}).members) || [])
+    .filter((m) => m && typeof m.userId === "string" && (m.role === "editor" || m.role === "viewer"))
+    .map((m) => ({ userId: m.userId, role: m.role }));
+  res.json(await store.setMembers(req.params.id, members));
+}));
+
+api.delete("/projects/:id", requirePerm("manage"), wrap(async (req, res) => {
   await store.remove(req.params.id);
   res.status(204).end();
 }));

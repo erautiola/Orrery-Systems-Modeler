@@ -24,6 +24,19 @@ test("create assigns an id and rev 1", async () => {
   assert.ok(p.model && Array.isArray(p.model.elements));
 });
 
+test("create records the owner and an empty member list; setMembers updates them", async () => {
+  const s = await tmpStore();
+  const p = await s.create("Owned", null, "user-1");
+  assert.equal(p.ownerId, "user-1");
+  assert.deepEqual(p.members, []);
+  const updated = await s.setMembers(p.id, [{ userId: "user-2", role: "editor" }]);
+  assert.deepEqual(updated.members, [{ userId: "user-2", role: "editor" }]);
+  // ownerId also flows into list summaries
+  const sum = (await s.list()).find((x) => x.id === p.id);
+  assert.equal(sum.ownerId, "user-1");
+  assert.equal(sum.members.length, 1);
+});
+
 test("save bumps rev and persists the model", async () => {
   const s = await tmpStore();
   const p = await s.create("Demo");

@@ -54,16 +54,26 @@ class Store {
     return JSON.parse(raw);
   }
 
-  async create(name, model) {
+  async create(name, model, ownerId) {
     const id = crypto.randomBytes(8).toString("hex");
     const now = Date.now();
     const project = {
       id, name: (name || "Untitled").trim() || "Untitled",
       rev: 1, createdAt: now, updatedAt: now,
+      ownerId: ownerId || null, members: [],
       model: model || emptyModel(),
     };
     await this._write(project);
     return project;
+  }
+
+  // replace a project's member list (owner is separate, via ownerId)
+  async setMembers(id, members) {
+    const cur = await this.get(id);
+    cur.members = Array.isArray(members) ? members : [];
+    cur.updatedAt = Date.now();
+    await this._write(cur);
+    return cur;
   }
 
   // save expects the rev the client started from; bumps rev on success
@@ -106,6 +116,7 @@ function summary(p) {
   return {
     id: p.id, name: p.name, rev: p.rev,
     createdAt: p.createdAt, updatedAt: p.updatedAt,
+    ownerId: p.ownerId || null, members: p.members || [],
     elements: (m.elements || []).length,
     diagrams: (m.diagrams || []).length,
   };

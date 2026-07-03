@@ -108,7 +108,7 @@ and seat counting all need "who is this user."
   during rollout, then flip it off.
 - **Migration**: assign all existing anonymous projects to the initial admin.
 
-### Phase 2 — Authorization (roles & project permissions)
+### Phase 2 — Authorization (roles & project permissions)  ✅ *shipped*
 - **Global roles**: `admin` (manage users/license/all projects) and `user`.
 - **Per-project roles**: `owner` (manage members + delete), `editor` (read +
   write), `viewer` (read-only).

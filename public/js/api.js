@@ -26,5 +26,8 @@
     me: () => req("GET", "/api/auth/me"),
     login: (username, password) => req("POST", "/api/auth/login", { username, password }),
     logout: () => req("POST", "/api/auth/logout"),
+    // users & sharing
+    users: () => req("GET", "/api/users"),
+    setMembers: (id, members) => req("PUT", "/api/projects/" + id + "/members", { members }),
   };
 })(window);
