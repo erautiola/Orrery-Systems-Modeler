@@ -27,7 +27,7 @@ test("get on unknown/expired session returns null", async () => {
   const s = await tmpStore();
   assert.equal(s.get("nope"), null);
   const id = await s.create("u");
-  s.sessions[id].expiresAt = Date.now() - 1; // force-expire
+  s.sessions.get(id).expiresAt = Date.now() - 1; // force-expire
   assert.equal(s.get(id), null);
 });
 
