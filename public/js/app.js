@@ -590,8 +590,14 @@
       p.appendChild(textField("Flow type", el.flowType || "", (v) => { el.flowType = v; touch(true); }));
       p.appendChild(checkField("Conjugated (~)", el.isConjugated, (v) => { el.isConjugated = v; touch(true); }));
       const parts = S.model.elements.filter((e) => e.type === "part");
-      const popts = `<option value="">(free — not on a part)</option>` + parts.map((pt) => `<option value="${pt.id}"${el.ownerId === pt.id ? " selected" : ""}>${esc(pt.name)}</option>`).join("");
-      p.appendChild(selectField("On part", popts, (v) => { el.ownerId = v || null; touch(true); }));
+      let popts = `<option value="">(free — not on a part)</option>`;
+      // on an IBD, a port may sit on the enclosing block's boundary
+      if (S.diagram && S.diagram.type === "ibd" && S.diagram.blockId) {
+        const blk = Model.elementById(S.model, S.diagram.blockId);
+        if (blk) popts += `<option value="${blk.id}"${el.ownerId === blk.id ? " selected" : ""}>▢ ${esc(blk.name)} (boundary)</option>`;
+      }
+      popts += parts.map((pt) => `<option value="${pt.id}"${el.ownerId === pt.id ? " selected" : ""}>${esc(pt.name)}</option>`).join("");
+      p.appendChild(selectField("On part / boundary", popts, (v) => { el.ownerId = v || null; touch(true); }));
     }
     if (el.type === "constraintProp") {
       p.appendChild(textField("Constraint expression { }", el.expression || "", (v) => { el.expression = v; touch(true); }));

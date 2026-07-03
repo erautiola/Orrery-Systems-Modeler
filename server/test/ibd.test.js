@@ -104,6 +104,23 @@ test("createIbdFromBlock reuses existing owned parts instead of duplicating", ()
   assert.equal(d.nodes[0].elementId, existing.id);
 });
 
+test("boundaryBand detects the frame-edge band (for boundary ports)", () => {
+  const r = { x: 100, y: 100, w: 200, h: 120 }; // 100..300 x, 100..220 y
+  const m = 26;
+  // on the left edge -> in band
+  assert.equal(Model.boundaryBand(100, 160, r, m), true);
+  // just inside the top edge -> in band
+  assert.equal(Model.boundaryBand(200, 110, r, m), true);
+  // a corner -> in band
+  assert.equal(Model.boundaryBand(300, 220, r, m), true);
+  // deep interior -> not in band
+  assert.equal(Model.boundaryBand(200, 160, r, m), false);
+  // far outside -> not in band
+  assert.equal(Model.boundaryBand(500, 160, r, m), false);
+  // just outside the edge but within margin -> in band
+  assert.equal(Model.boundaryBand(90, 160, r, m), true);
+});
+
 test("createIbdFromBlock with no parts still yields an empty ibd", () => {
   const m = Model.newModel();
   const b = Model.newElement("block"); b.name = "Empty"; m.elements.push(b);
