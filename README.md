@@ -61,8 +61,11 @@ cookie. Set `COOKIE_SECURE=1` when served over HTTPS. Accounts/sessions live in
 **Roles & sharing.** With auth on, each project has an **owner** (its creator);
 the owner (or a global **admin**) can **Share** it with teammates as **editor**
 (read + write) or **viewer** (read-only). The server enforces access on every
-request and the project list shows only what you may see. A shared **admin
-page** for managing accounts, plus project CM and licensing, are on the
+request and the project list shows only what you may see.
+
+**Admin page.** A global admin gets an **Admin** button to add / remove /
+disable users, reset passwords, and change roles (the last active admin is
+protected). Project CM and licensing are on the
 [roadmap](docs/multi-user-platform-roadmap.md).
 
 ## Desktop app (no browser, no Docker)

@@ -201,6 +201,21 @@ table.grid td.cellmark .mk { color: var(--accent); font-weight: 700; }
 .proj-row .trash { color: var(--bad); background: none; border: none; cursor: pointer; font-size: 15px; }
 .empty { color: var(--muted); text-align: center; padding: 24px; }
 
+/* admin: user-management dialog */
+.admin-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; font-size: 13px; color: var(--muted); }
+.admin-table-wrap { overflow: auto; max-height: 55vh; }
+.admin-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.admin-table th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); padding: 4px 8px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--panel); }
+.admin-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.admin-actions { display: flex; gap: 4px; }
+.mini2 { background: var(--panel-2); border: 1px solid var(--border); color: var(--text); border-radius: 5px; padding: 3px 7px; font-size: 11px; cursor: pointer; }
+.mini2:hover { border-color: var(--accent); }
+.mini2.del { color: var(--bad); }
+.mini2.del:hover { border-color: var(--bad); }
+.ustatus { font-size: 11px; padding: 1px 6px; border-radius: 4px; }
+.ustatus.active { color: #34d399; }
+.ustatus.disabled { color: var(--muted); }
+
 /* permissions: read-only badge, share button + dialog */
 .ro-badge { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); border: 1px solid var(--border); border-radius: 5px; padding: 1px 6px; }
 .mini-btn { padding: 3px 9px; font-size: 12px; }

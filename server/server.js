@@ -11,6 +11,7 @@
  * ==========================================================================*/
 "use strict";
 const path = require("path");
+const fs = require("fs/promises");
 const express = require("express");
 const { Store } = require("./store");
 const { UserStore, httpError } = require("./users");
@@ -168,6 +169,58 @@ api.delete("/projects/:id", requirePerm("manage"), wrap(async (req, res) => {
 }));
 
 app.use("/api", api);
+
+// --- admin API (global admins only) ---------------------------------------
+async function audit(req, action, target) {
+  const line = JSON.stringify({ ts: Date.now(), actor: req.user && req.user.username, action, target }) + "\n";
+  try { await fs.appendFile(path.join(AUTH_DIR, "audit.log"), line); } catch (e) { /* non-fatal */ }
+}
+const admin = express.Router();
+admin.use((req, res, next) => {
+  if (!req.user || req.user.role !== "admin") return res.status(403).json({ error: "Administrator access required" });
+  next();
+});
+admin.get("/users", wrap(async (_req, res) => {
+  res.json({ users: users.details(), seats: { used: users.activeCount(), max: null } });
+}));
+admin.post("/users", wrap(async (req, res) => {
+  const { username, password, role } = req.body || {};
+  const u = await users.create({ username, password, role });
+  await audit(req, "user.create", u.username);
+  res.status(201).json(u);
+}));
+admin.patch("/users/:id", wrap(async (req, res) => {
+  const { role, status } = req.body || {};
+  const target = users.byId(req.params.id);
+  if (!target) throw httpError(404, "No such user");
+  const demoting = role && role !== "admin" && target.role === "admin";
+  const disabling = status === "disabled" && target.status !== "disabled";
+  if ((demoting || disabling) && target.role === "admin" && target.status === "active" && users.adminCount() <= 1)
+    throw httpError(400, "Can't remove the last active administrator");
+  if (role) await users.setRole(target.id, role);
+  if (status) { await users.setStatus(target.id, status); if (status === "disabled") await sessions.destroyUser(target.id); }
+  await audit(req, "user.update", target.username + " " + JSON.stringify({ role, status }));
+  res.json(users.pub(users.byId(target.id)));
+}));
+admin.post("/users/:id/password", wrap(async (req, res) => {
+  const target = users.byId(req.params.id);
+  if (!target) throw httpError(404, "No such user");
+  await users.setPassword(target.id, (req.body || {}).password);
+  await sessions.destroyUser(target.id); // force re-login with the new password
+  await audit(req, "user.password", target.username);
+  res.status(204).end();
+}));
+admin.delete("/users/:id", wrap(async (req, res) => {
+  const target = users.byId(req.params.id);
+  if (!target) throw httpError(404, "No such user");
+  if (target.role === "admin" && target.status === "active" && users.adminCount() <= 1)
+    throw httpError(400, "Can't remove the last active administrator");
+  await users.remove(target.id);
+  await sessions.destroyUser(target.id);
+  await audit(req, "user.delete", target.username);
+  res.status(204).end();
+}));
+app.use("/api/admin", admin);
 
 // --- static frontend ------------------------------------------------------
 app.use(express.static(PUBLIC_DIR));
