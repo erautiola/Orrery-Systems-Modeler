@@ -53,16 +53,14 @@ app.use((req, _res, next) => {
 });
 
 // --- authentication -------------------------------------------------------
-function parseCookies(req) {
-  const out = Object.create(null); // null-prototype: hostile cookie names can't pollute
+// read a single cookie by name — never writes a user-controlled value as an
+// object key, so there is no prototype-pollution surface
+function getCookie(req, name) {
   for (const part of String(req.headers.cookie || "").split(";")) {
     const i = part.indexOf("=");
-    if (i <= 0) continue;
-    const name = part.slice(0, i).trim();
-    if (name === "__proto__" || name === "constructor" || name === "prototype") continue;
-    out[name] = decodeURIComponent(part.slice(i + 1).trim());
+    if (i > 0 && part.slice(0, i).trim() === name) return decodeURIComponent(part.slice(i + 1).trim());
   }
-  return out;
+  return null;
 }
 function setSid(res, id) {
   res.setHeader("Set-Cookie", `${SID}=${id}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${7 * 24 * 3600}${COOKIE_SECURE ? "; Secure" : ""}`);
@@ -73,7 +71,7 @@ function clearSid(res) {
 // resolve the current user from the session cookie (always runs)
 app.use((req, _res, next) => {
   req.user = null;
-  const sid = parseCookies(req)[SID];
+  const sid = getCookie(req, SID);
   const sess = sid && sessions.get(sid);
   if (sess) {
     const u = users.byId(sess.userId);
