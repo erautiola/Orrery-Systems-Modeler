@@ -6,6 +6,15 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- **Diagrams & tables in the Model Explorer**
+  ([#42](https://github.com/erautiola/Orrery-Systems-Modeler/issues/42)). Diagrams
+  and tables now appear in the tree under the element they're filed under — an
+  **IBD** shows under its block automatically, and creating a diagram/table while
+  a **package** is selected files it there. **Click a diagram/table row to open
+  it** (or **double‑click an element** to open its associated view); focus jumps
+  to its tab if already open. **Drag a diagram/table onto an element** to file it,
+  or onto empty space to unfile it; unfiled views sit at the tree root. New pure
+  `Model.viewsForElement` / `diagramOwner` / `unassociatedViews` (unit‑tested).
 - **Drag-and-drop in the Model Explorer**
   ([#43](https://github.com/erautiola/Orrery-Systems-Modeler/issues/43)). Drag a
   tree row onto a **package** or **block** to re-parent it (move between packages,

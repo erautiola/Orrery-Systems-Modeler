@@ -55,6 +55,14 @@ on empty tree space to move it back to the root. (Cycles are prevented, and
 ownership set this way is logical — a block still draws as a plain box; only
 packages, composite states, and partitions visually nest their children.)
 
+**Diagrams & tables in the tree.** Diagrams and tables appear in the Explorer
+under the element they're filed under — an **IBD** shows under its block
+automatically, and a new diagram/table is filed under the **selected package**
+when you create it. **Click a diagram/table row to open it** (or **double‑click
+an element** to open its associated view); its tab comes to focus if already open.
+**Drag a diagram/table onto an element** to file it there, or onto empty space to
+unfile it. Unfiled views sit at the tree root.
+
 ## Diagrams
 
 Add with **＋ New diagram** on the *Diagrams* tab. Types: Class, Package,

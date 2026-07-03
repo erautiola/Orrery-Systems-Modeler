@@ -293,7 +293,7 @@
           S.model.diagrams = S.model.diagrams.filter((x) => x !== d);
           closeView({ kind: "diagram", id: d.id });
           if (!S.tabs.length && S.model.diagrams.length) selectDiagram(S.model.diagrams[0]);
-          markDirty(true); renderDiagramList();
+          markDirty(true); renderDiagramList(); renderTree();
           return;
         }
         selectDiagram(d);
@@ -338,14 +338,21 @@
         const blockId = bsel ? bsel.value : null;
         const parts = blockId ? Model.blockParts(S.model, blockId) : [];
         const d = Model.createIbdFromBlock(S.model, blockId, chosenRows(m, parts), name);
-        markDirty(true, "create-ibd"); closeModal(); selectDiagram(d);
+        markDirty(true, "create-ibd"); closeModal(); selectDiagram(d); renderTree();
         status(`Created “${d.name}” with ${d.nodes.length} part(s).`);
         return;
       }
       const d = Model.newDiagram(type, name);
-      S.model.diagrams.push(d); markDirty(true); closeModal(); selectDiagram(d);
+      const owner = selectedPackageId(); if (owner) d.ownerId = owner; // file under the selected package
+      S.model.diagrams.push(d); markDirty(true); closeModal(); selectDiagram(d); renderTree();
     });
     m.querySelector("#dgName").select();
+  }
+  // the currently-selected package, if any (new diagrams/tables file under it)
+  function selectedPackageId() {
+    const sel = S.editor.getSelection();
+    if (sel && sel.kind === "element") { const el = Model.elementById(S.model, sel.id); if (el && el.type === "package") return el.id; }
+    return null;
   }
 
   // ---- IBD-from-block: shared part-picker + standalone flow --------------
@@ -442,7 +449,7 @@
           S.model.tables = S.model.tables.filter((x) => x !== t);
           closeView({ kind: "table", id: t.id });
           if (!S.tabs.length) loadFirstDiagram();
-          markDirty(true); renderTableList();
+          markDirty(true); renderTableList(); renderTree();
           return;
         }
         selectTable(t);
@@ -460,7 +467,9 @@
     m.querySelector('[data-act="ok"]').addEventListener("click", () => {
       const kind = m.querySelector("#tbType").value;
       const name = m.querySelector("#tbName").value || Model.TABLES[kind].label;
-      const t = Model.newTable(kind, name); S.model.tables.push(t); markDirty(true); closeModal(); selectTable(t);
+      const t = Model.newTable(kind, name);
+      const owner = selectedPackageId(); if (owner) t.ownerId = owner;
+      S.model.tables.push(t); markDirty(true); closeModal(); selectTable(t); renderTree();
     });
     m.querySelector("#tbName").select();
   }
@@ -943,11 +952,22 @@
   }
 
   // ============================================================ TREE
-  let draggingId = null; // element being dragged in the Model Explorer
+  let draggingId = null;   // element being dragged in the Model Explorer
+  let draggingView = null; // { kind, id } diagram/table being dragged
   function reparent(dragId, targetId) {
     if (!Model.canReparent(S.model, dragId, targetId)) return;
     Model.elementById(S.model, dragId).ownerId = targetId || null;
     markDirty(true, "reparent"); renderTree(); if (S.editor) S.editor.render();
+  }
+  // file a diagram/table under element `ownerId` (or null = unassociated)
+  function associateView(view, ownerId) {
+    if (!view) return;
+    const obj = view.kind === "diagram"
+      ? S.model.diagrams.find((d) => d.id === view.id)
+      : S.model.tables.find((t) => t.id === view.id);
+    if (!obj || (obj.ownerId || null) === (ownerId || null)) return;
+    obj.ownerId = ownerId || null;
+    markDirty(true, "associate"); renderTree();
   }
   function renderTree() {
     const tree = $("modelTree"); tree.innerHTML = "";
@@ -956,10 +976,31 @@
     const roots = S.model.elements.filter((e) => !e.ownerId);
     const top = roots.length ? roots : S.model.elements;
     for (const e of top.filter((e) => e.type !== "note")) ul.appendChild(treeNode(e));
+    // diagrams/tables not filed under any element live at the tree root
+    for (const v of Model.unassociatedViews(S.model)) ul.appendChild(viewNode(v));
     tree.appendChild(ul);
-    // drop on empty tree space → move to the root (un-parent)
-    tree.ondragover = (ev) => { if (draggingId && !ev.target.closest(".row")) ev.preventDefault(); };
-    tree.ondrop = (ev) => { if (!ev.target.closest(".row")) { ev.preventDefault(); reparent(draggingId, null); } };
+    // drop on empty tree space → move an element/view to the root
+    tree.ondragover = (ev) => { if ((draggingId || draggingView) && !ev.target.closest(".row")) ev.preventDefault(); };
+    tree.ondrop = (ev) => {
+      if (ev.target.closest(".row")) return;
+      ev.preventDefault();
+      if (draggingView) associateView(draggingView, null); else reparent(draggingId, null);
+    };
+  }
+  // a diagram/table row in the tree: click opens it, drag re-files it
+  function viewNode(v) {
+    const li = document.createElement("li");
+    const row = document.createElement("div"); row.className = "row view-row"; row.dataset.viewid = v.id; row.dataset.viewkind = v.kind;
+    const ico = v.kind === "table" ? "▤" : "◫";
+    const abbr = v.kind === "table" ? "" : ((Model.DIAGRAMS[v.dtype] || {}).abbr || "");
+    row.innerHTML = `<span class="ico">${ico}</span><span>${esc(v.name)}</span>${abbr ? `<span class="vabbr">${esc(abbr)}</span>` : ""}`;
+    row.title = "Open " + v.name;
+    row.addEventListener("click", () => openView(v.kind, v.id));
+    row.draggable = true;
+    row.addEventListener("dragstart", (ev) => { ev.stopPropagation(); draggingView = { kind: v.kind, id: v.id }; draggingId = null; ev.dataTransfer.effectAllowed = "move"; ev.dataTransfer.setData("text/plain", "view:" + v.id); });
+    row.addEventListener("dragend", () => { draggingView = null; document.querySelectorAll(".row.drop-target").forEach((r) => r.classList.remove("drop-target")); });
+    li.appendChild(row);
+    return li;
   }
   function treeNode(e) {
     const li = document.createElement("li");
@@ -969,9 +1010,20 @@
     row.draggable = true;
     row.addEventListener("dragstart", (ev) => { ev.stopPropagation(); draggingId = e.id; ev.dataTransfer.effectAllowed = "move"; ev.dataTransfer.setData("text/plain", e.id); });
     row.addEventListener("dragend", () => { draggingId = null; document.querySelectorAll(".row.drop-target").forEach((r) => r.classList.remove("drop-target")); });
-    row.addEventListener("dragover", (ev) => { if (Model.canReparent(S.model, draggingId, e.id)) { ev.preventDefault(); ev.stopPropagation(); row.classList.add("drop-target"); } });
+    row.addEventListener("dragover", (ev) => {
+      const ok = draggingView ? true : Model.canReparent(S.model, draggingId, e.id);
+      if (ok) { ev.preventDefault(); ev.stopPropagation(); row.classList.add("drop-target"); }
+    });
     row.addEventListener("dragleave", () => row.classList.remove("drop-target"));
-    row.addEventListener("drop", (ev) => { ev.preventDefault(); ev.stopPropagation(); row.classList.remove("drop-target"); reparent(draggingId, e.id); });
+    row.addEventListener("drop", (ev) => {
+      ev.preventDefault(); ev.stopPropagation(); row.classList.remove("drop-target");
+      if (draggingView) associateView(draggingView, e.id); else reparent(draggingId, e.id);
+    });
+    // double-click an element that has associated diagrams/tables → open the first
+    row.addEventListener("dblclick", () => {
+      const views = Model.viewsForElement(S.model, e.id);
+      if (views.length) openView(views[0].kind, views[0].id);
+    });
     row.addEventListener("click", () => {
       // always populate Properties; if the element is placed on a diagram, focus
       // it there (the current one if possible, else open one that shows it)
@@ -987,7 +1039,13 @@
     if (items.length) row.addEventListener("contextmenu", (ev) => { ev.preventDefault(); contextMenu(ev.clientX, ev.clientY, items); });
     li.appendChild(row);
     const kids = S.model.elements.filter((c) => c.ownerId === e.id && c.type !== "note");
-    if (kids.length) { const ul = document.createElement("ul"); kids.forEach((k) => ul.appendChild(treeNode(k))); li.appendChild(ul); }
+    const views = Model.viewsForElement(S.model, e.id);
+    if (kids.length || views.length) {
+      const ul = document.createElement("ul");
+      kids.forEach((k) => ul.appendChild(treeNode(k)));
+      views.forEach((v) => ul.appendChild(viewNode(v)));
+      li.appendChild(ul);
+    }
     return li;
   }
 
