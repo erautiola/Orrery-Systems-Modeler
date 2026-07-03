@@ -32,6 +32,17 @@
   function headHeight(n, stereo) {
     return HEADPAD * 2 + NAME_H + (stereo ? STEREO_H : 0) + Math.max(0, n - 1) * NAME_LH;
   }
+  // wrap a requirement's tag rows ("id = …", "text = …") to the box width,
+  // returning every display line (feature font) so long text tags wrap.
+  function requirementTagLines(el, w) {
+    const out = [];
+    const max = Math.max(24, w - PADX * 2);
+    for (const k of Object.keys(el.tags || {})) {
+      const s = k + " = " + (el.tags[k] || "");
+      for (const ln of TextWrap.wrapLines(s, max, (x) => tw(x, F_FEAT))) out.push(ln);
+    }
+    return out;
+  }
   // append a centered, possibly multi-line label; returns the text node
   function centeredLines(g, cx, firstBaseline, lines, lineH, attrs) {
     const t = el2("text", { x: cx, "text-anchor": "middle", ...attrs });
@@ -140,9 +151,10 @@
     if (stereo) w = Math.max(w, tw(stereo, F_STEREO) + PADX * 2);
     const comps = (spec.compartments || []).map((c) => compartmentItems(el, c));
     for (const items of comps) for (const it of items) w = Math.max(w, tw(it.text, F_FEAT) + PADX * 2);
+    if (spec.shape === "requirement") w = Math.max(w, 220); // readable width for the wrapped text tag
     w = Math.min(w, MAXW);
     let h = headHeight(nameLines(el.name, w).length, stereo);
-    if (spec.shape === "requirement") h += (Object.keys(el.tags || {}).length || 0) * LINE + 8;
+    if (spec.shape === "requirement") h += requirementTagLines(el, w).length * LINE + 8;
     for (const items of comps) h += Math.max(items.length ? items.length * LINE + 8 : 10, 10);
     return { w: Math.round(w), h: Math.round(Math.max(h, MINH)) };
   }
@@ -274,7 +286,7 @@
     centeredLines(g, W / 2, HEADPAD + 28, lines, NAME_LH, { "font-weight": 700, "font-size": 14, fill: "#1a2236" });
     let cy = headH; g.appendChild(el2("line", { x1: 0, y1: cy, x2: W, y2: cy, stroke: "#c2cbe0" }));
     let y = cy + 14;
-    for (const k of Object.keys(el.tags || {})) { g.appendChild(text(PADX, y, k + " = " + (el.tags[k] || ""), { "font-size": 11, fill: "#1a2236", "font-family": "'Cascadia Code', monospace" })); y += LINE; }
+    for (const ln of requirementTagLines(el, W)) { g.appendChild(text(PADX, y, ln, { "font-size": 11, fill: "#1a2236", "font-family": "'Cascadia Code', monospace" })); y += LINE; }
   }
 
   function drawPackage(g, el, W, H, container) {

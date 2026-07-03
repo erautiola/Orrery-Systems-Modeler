@@ -46,6 +46,7 @@
 
     // -------------------------------------------------- mouse down
     svg.addEventListener("mousedown", (e) => {
+      if (e.button !== 0) return; // ignore right/middle button (right-click = context menu)
       const handle = e.target.closest(".handle");
       const nodeG = e.target.closest(".uml-node");
       const edgeG = e.target.closest(".edge");
