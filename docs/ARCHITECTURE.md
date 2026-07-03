@@ -69,6 +69,10 @@ Static ..> SPA : serves
   (which elements/relationships each diagram type offers, and how they draw).
 - Rendering is split: **`renderer.js`** for node-and-edge diagrams (class, BDD,
   state machine, …) and **`seq-renderer.js`** for sequence diagrams.
+- **`text-wrap.js`** is a small pure helper (`wrapLines`, pixel-measurer
+  injected) that the renderers use to word-wrap long element names into multiple
+  lines so labels never overflow their box; the box header grows to fit the
+  wrapped lines. Being dependency-free it is unit-tested under Node.
 
 ## Deployment
 
