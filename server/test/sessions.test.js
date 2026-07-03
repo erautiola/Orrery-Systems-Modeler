@@ -47,6 +47,15 @@ test("destroyUser removes every session for a user", async () => {
   assert.equal(s.get(c).userId, "u2");
 });
 
+test("rejects non-token ids and never pollutes Object.prototype", async () => {
+  const s = await tmpStore();
+  assert.equal(s.get("__proto__"), null);
+  assert.equal(s.get("constructor"), null);
+  assert.equal(s.get("../../etc"), null);
+  await s.destroy("__proto__"); // must be a safe no-op
+  assert.equal(({}).userId, undefined, "prototype was not polluted");
+});
+
 test("persists across reloads", async () => {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), "osm-sess2-"));
   const s1 = new SessionStore(dir); await s1.init();

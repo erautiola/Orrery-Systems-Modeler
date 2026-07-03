@@ -54,10 +54,13 @@ app.use((req, _res, next) => {
 
 // --- authentication -------------------------------------------------------
 function parseCookies(req) {
-  const out = {};
+  const out = Object.create(null); // null-prototype: hostile cookie names can't pollute
   for (const part of String(req.headers.cookie || "").split(";")) {
     const i = part.indexOf("=");
-    if (i > 0) out[part.slice(0, i).trim()] = decodeURIComponent(part.slice(i + 1).trim());
+    if (i <= 0) continue;
+    const name = part.slice(0, i).trim();
+    if (name === "__proto__" || name === "constructor" || name === "prototype") continue;
+    out[name] = decodeURIComponent(part.slice(i + 1).trim());
   }
   return out;
 }
