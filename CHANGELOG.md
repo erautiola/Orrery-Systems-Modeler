@@ -5,6 +5,18 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- **Create an IBD from a block**
+  ([#34](https://github.com/erautiola/Orrery-Systems-Modeler/issues/34)).
+  Right‑click a block (canvas or Model Explorer) or use **⊞ Create IBD from this
+  block** in Properties; the **＋** *New diagram* dialog also lets you pick the
+  **owning block** when the type is IBD. A part‑picker lists the block's parts
+  (from its composition/aggregation relationships and any parts it already owns)
+  as `role : Type [mult]`; the chosen ones are placed on a new IBD drawn with the
+  block as a **«block» boundary frame**. New pure `Model.blockParts` /
+  `Model.createIbdFromBlock` (unit‑tested) and a lightweight right‑click context
+  menu.
+
 ### Fixed
 - **Long element names now wrap** inside their box instead of overflowing the
   edges ([#33](https://github.com/erautiola/Orrery-Systems-Modeler/issues/33)).

@@ -73,6 +73,7 @@ class Diagram {
   id : string
   type : string
   name : string
+  blockId : string
 }
 class DiagramNode {
   x / y / w / h : number
@@ -117,6 +118,13 @@ Element "0..1" o-- "*" Element : ownerId (containment)
   how it draws.
 - **Tables** are views, not data: an `element` table filters/renders elements
   into editable cells; a `matrix` reads/writes relationships of a chosen type.
+- **IBD ← block.** An Internal Block Diagram may carry an optional `blockId` tying
+  it to the block whose structure it shows (the renderer draws that block as a
+  «block» boundary frame). `Model.blockParts(model, blockId)` enumerates a block's
+  candidate parts — from its `composition`/`aggregation` relationships (target
+  block = the part's type, `targetRole` names it) plus any `part` elements it
+  already owns — and `Model.createIbdFromBlock(model, blockId, chosen, name)`
+  builds the diagram, creating/reusing typed, block‑owned part elements.
 
 ## Database / ER tables (data modeling)
 
