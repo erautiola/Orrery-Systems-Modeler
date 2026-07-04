@@ -17,6 +17,7 @@ const { Store } = require("./store");
 const { UserStore, httpError } = require("./users");
 const { SessionStore } = require("./sessions");
 const { CmStore } = require("./cm");
+const { LockStore } = require("./locks");
 const Permissions = require(path.join(__dirname, "..", "public", "js", "permissions.js"));
 
 const PORT = process.env.PORT || 8137;
@@ -35,6 +36,7 @@ const store = new Store(DATA_DIR);
 const users = new UserStore(AUTH_DIR);
 const sessions = new SessionStore(AUTH_DIR);
 const cm = new CmStore(CM_DIR);
+const locks = new LockStore();
 const app = express();
 app.use(express.json({ limit: "32mb" }));
 
@@ -153,10 +155,37 @@ api.get("/projects/:id", requirePerm("read"), wrap(async (req, res) => {
 }));
 
 api.put("/projects/:id", requirePerm("write"), wrap(async (req, res) => {
+  // exclusive editing: block if another user holds the edit lock, else (re)take it
+  if (AUTH_REQUIRED && req.user) {
+    const held = locks.get(req.params.id);
+    if (held && held.userId !== req.user.id) throw httpError(423, `Locked for editing by ${held.username}`);
+    locks.acquire(req.params.id, req.user);
+  }
   const { name, model, rev, message } = req.body || {};
   const saved = await store.save(req.params.id, { name, model, rev });
   if (model != null) await cm.recordVersion(saved.id, { rev: saved.rev, author: who(req), message, model: saved.model });
   res.json(saved);
+}));
+
+// --- edit locks (check-out / check-in) ------------------------------------
+api.get("/projects/:id/lock", requirePerm("read"), wrap(async (req, res) => {
+  res.json({ lock: locks.get(req.params.id) });
+}));
+api.post("/projects/:id/lock", requirePerm("write"), wrap(async (req, res) => {
+  if (!req.user) return res.json({ ok: true, lock: null }); // open mode: no locking
+  const force = !!(req.body || {}).force && Permissions.can(req.user, "manage", req._project);
+  res.json(locks.acquire(req.params.id, req.user, force));
+}));
+api.post("/projects/:id/lock/renew", requirePerm("write"), wrap(async (req, res) => {
+  if (!req.user) return res.json({ ok: true, lock: null });
+  res.json(locks.renew(req.params.id, req.user));
+}));
+api.delete("/projects/:id/lock", requirePerm("write"), wrap(async (req, res) => {
+  if (req.user) {
+    const force = String(req.query.force || "") === "1" && Permissions.can(req.user, "manage", req._project);
+    locks.release(req.params.id, req.user, force);
+  }
+  res.status(204).end();
 }));
 
 api.patch("/projects/:id", requirePerm("manage"), wrap(async (req, res) => {
@@ -205,6 +234,7 @@ api.put("/projects/:id/members", requirePerm("manage"), wrap(async (req, res) =>
 api.delete("/projects/:id", requirePerm("manage"), wrap(async (req, res) => {
   await store.remove(req.params.id);
   await cm.removeProject(req.params.id);
+  locks.removeProject(req.params.id);
   res.status(204).end();
 }));
 

@@ -15,6 +15,7 @@
       view: { x: 60, y: 60, scale: 1 },
       selection: null,
       drag: null,        // {type:'pan'|'move'|'resize'|'link', ...}
+      readOnly: false,   // when true: select/pan/zoom only — no mutations
     };
     cb = cb || {};
 
@@ -52,12 +53,15 @@
       const edgeG = e.target.closest(".edge");
       const w = toWorld(e.clientX, e.clientY);
 
+      const ro = state.readOnly; // read-only: allow select/pan/zoom, block edits
       if (state.tool.mode === "element" && !nodeG && !handle) {
+        if (ro) return;
         e.preventDefault();
         createElementAt(state.tool.type, w.x, w.y);
         return;
       }
       if (handle) {
+        if (ro) return;
         const id = state.selection && state.selection.id;
         const n = id && nodeFor(id);
         if (n) { state.drag = { type: "resize", h: handle.getAttribute("data-h"), n, start: w, x0: n.x, y0: n.y, w0: n.w, h0: n.h }; e.preventDefault(); }
@@ -67,6 +71,7 @@
         const id = nodeG.getAttribute("data-id");
         if (isTiming()) { select({ kind: "element", id }); e.preventDefault(); return; } // bands don't move
         if (state.tool.mode === "rel") {
+          if (ro) return;
           state.drag = { type: "link", sourceId: id, cur: w, msgY: w.y };
           drawTempLink(id, w);
           e.preventDefault();
@@ -75,14 +80,14 @@
         const n = nodeFor(id);
         const abs = state.layers.absById.get(id) || { x: n.x, y: n.y };
         select({ kind: "element", id });
-        state.drag = { type: "move", id, n, start: w, x0: n.x, y0: n.y, ax0: abs.x, ay0: abs.y };
+        if (!ro) state.drag = { type: "move", id, n, start: w, x0: n.x, y0: n.y, ax0: abs.x, ay0: abs.y };
         e.preventDefault();
         return;
       }
       if (edgeG) {
         const rid = edgeG.getAttribute("data-id");
         select({ kind: "relationship", id: rid });
-        if (isSeq()) {
+        if (!ro && isSeq()) {
           const rel = state.model.relationships.find((r) => r.id === rid);
           if (rel && Model.RELATIONSHIPS[rel.type] && Model.RELATIONSHIPS[rel.type].msg)
             state.drag = { type: "msgmove", rel, start: w, y0: rel.y || 0 };
@@ -154,6 +159,7 @@
 
     // double-click → quick rename
     svg.addEventListener("dblclick", (e) => {
+      if (state.readOnly) return;
       const nodeG = e.target.closest(".uml-node");
       if (!nodeG) return;
       const el = Model.elementById(state.model, nodeG.getAttribute("data-id"));
@@ -165,6 +171,7 @@
     // keyboard delete
     window.addEventListener("keydown", (e) => {
       if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+      if (state.readOnly) return;
       if ((e.key === "Delete" || e.key === "Backspace") && state.selection) {
         e.preventDefault(); deleteSelection();
       }
@@ -358,6 +365,8 @@
       zoomOut: () => zoomAt(1 / 1.2, svg.clientWidth / 2, svg.clientHeight / 2),
       getView: () => ({ x: state.view.x, y: state.view.y, scale: state.view.scale }),
       setView: (v) => { if (v) { state.view = { x: v.x, y: v.y, scale: v.scale }; applyView(); } },
+      setReadOnly: (v) => { state.readOnly = !!v; if (v) { state.tool = { mode: "select" }; if (cb.onToolReset) cb.onToolReset(); } svg.style.cursor = "grab"; },
+      isReadOnly: () => state.readOnly,
       getSelection: () => state.selection,
       reselect: (sel) => select(sel),
       refresh: () => { const s = state.selection; if (s && s.kind === "element") { const n = nodeFor(s.id); if (n) { n.w = 0; n.h = 0; } } render(); },

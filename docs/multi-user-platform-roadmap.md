@@ -123,7 +123,7 @@ and seat counting all need "who is this user."
   view **active sessions and live server instances**, and **license status**.
 - Admin API (`/api/admin/*`) guarded by the admin role; all actions audited.
 
-### Phase 4 — Project Configuration Management  *(4a history/baselines ✅ shipped; 4b locking next)*
+### Phase 4 — Project Configuration Management  *(4a history/baselines ✅ · 4b locking ✅ — shipped)*
 - **Locking (check-out/check-in):** a user takes an exclusive lock to edit;
   others are read-only until release. Locks are heartbeat-renewed and
   auto-expire. This complements the existing `rev` optimistic check (which
