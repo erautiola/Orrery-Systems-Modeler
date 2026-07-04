@@ -13,6 +13,15 @@ buttons in the top bar or **Ctrl+Z** / **Ctrl+Y** (also **Ctrl+Shift+Z** to redo
 A burst of typing in a field collapses into a single undo step. History is
 per‑open‑project and resets when you open or create a project.
 
+## Check-out / edit locks
+
+When sign-in is enabled, opening a project **checks it out** so only you can edit
+it. Anyone else who opens it sees it **read-only** with a **🔒 Locked by …** badge.
+Your lock renews itself while you work and is released when you switch projects,
+sign out, or close the tab (and it auto‑expires after a couple of idle minutes).
+If a project is locked by someone who's gone idle, an **owner or admin** can click
+**Take over** to reclaim it. (In open, no‑auth mode there are no locks.)
+
 ## Version history & baselines
 
 Undo/redo is your local editing history; **Version history** is the durable,

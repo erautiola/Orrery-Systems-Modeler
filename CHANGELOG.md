@@ -6,6 +6,13 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- **Project check-out / edit locks (Phase 4b of the multi-user platform).** When
+  authentication is on, opening a project **checks it out** for exclusive editing;
+  other users see it **read-only** with a "🔒 Locked by …" badge and the editor
+  blocks changes. The lock **auto-expires** (2 min) and is **heartbeat-renewed**
+  while you edit, and released when you switch projects, sign out, or close the
+  tab. A save by anyone who doesn't hold the lock is refused (**423**). Owners and
+  admins get a **Take over** button to reclaim a lock. (No effect in open mode.)
 - **Version history & baselines (Phase 4a of the multi-user platform).** Every
   save now records an immutable **snapshot** of the model (author, time, optional
   message). A new **History** dialog lists every version and lets you **restore**

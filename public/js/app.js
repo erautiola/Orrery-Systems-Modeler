@@ -22,6 +22,7 @@
     user: null,       // signed-in user { id, username, role } or null
     authRequired: false,
     canWrite: true, canManage: true, // permissions on the current project
+    iHoldLock: false, lockedByOther: false, lockHolder: null, lockProjectId: null, heartbeat: null,
   };
   const CLASSIFIER_TYPES = ["class", "interface", "enumeration", "datatype", "primitive", "component",
     "block", "valueType", "constraint", "interfaceBlock", "actor", "usecase", "requirement", "instance", "part", "state"];
@@ -122,6 +123,7 @@
 
   async function openProject(id) {
     try {
+      await releaseLock(); // let go of any project we were editing
       const p = await Api.get(id);
       S.project = { id: p.id, rev: p.rev, name: p.name, ownerId: p.ownerId || null, members: p.members || [] };
       S.model = normalizeModel(p.model);
@@ -135,6 +137,7 @@
       $("canvasHint").style.display = "none";
       status(`Opened “${p.name}”.` + (S.canWrite ? "" : " (view only)"));
       renderTree();
+      refreshLock(); // check out the project for exclusive editing (if permitted)
     } catch (e) { status("Open failed: " + e.message, true); }
   }
 
@@ -179,6 +182,9 @@
     } catch (e) {
       if (e.status === 409) {
         if (confirm(e.message + "\n\nReload the server's version now? (Your unsaved changes will be lost.)")) openProject(S.project.id);
+      } else if (e.status === 423) {
+        S.lockedByOther = true; S.iHoldLock = false; stopHeartbeat(); applyAccess();
+        status(e.message + " — the project is now read-only.", true);
       } else status("Save failed: " + e.message, true);
     }
   }
@@ -1199,6 +1205,12 @@
     else if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === "y" || (e.shiftKey && e.key.toLowerCase() === "z"))) { e.preventDefault(); redo(); }
   });
   window.addEventListener("beforeunload", (e) => { if (S.dirty) { e.preventDefault(); e.returnValue = ""; } });
+  // best-effort lock release when the tab closes (keepalive survives unload)
+  window.addEventListener("pagehide", () => {
+    if (S.authRequired && S.iHoldLock && S.lockProjectId) {
+      try { fetch("/api/projects/" + S.lockProjectId + "/lock", { method: "DELETE", credentials: "same-origin", keepalive: true }); } catch (e) { /* ignore */ }
+    }
+  });
 
   // drag-drop XMI onto canvas
   const wrap = document.querySelector(".canvas-wrap");
@@ -1293,9 +1305,61 @@
     const authOn = !!S.authRequired;
     S.canWrite = !authOn || Permissions.can(S.user, "write", S.project);
     S.canManage = !authOn || Permissions.can(S.user, "manage", S.project);
-    $("saveBtn").disabled = !!(S.project && !S.canWrite);
-    $("roBadge").hidden = !(S.project && !S.canWrite);
     $("shareBtn").hidden = !(S.project && S.canManage);
+    applyAccess();
+  }
+  // combine permission (viewer) and lock (someone else editing) into read-only
+  function applyAccess() {
+    const editable = !!S.project && S.canWrite && !S.lockedByOther;
+    $("saveBtn").disabled = !!(S.project && !editable);
+    if (S.editor) S.editor.setReadOnly(!!(S.project && !editable));
+    const badge = $("roBadge");
+    if (!S.project) { badge.hidden = true; return; }
+    if (S.lockedByOther) {
+      badge.hidden = false;
+      badge.innerHTML = `🔒 Locked by ${esc((S.lockHolder && S.lockHolder.username) || "another user")}` +
+        (S.canManage ? ` <button class="mini2" id="takeoverBtn">Take over</button>` : "");
+      const t = badge.querySelector("#takeoverBtn"); if (t) t.addEventListener("click", takeOver);
+    } else if (!S.canWrite) {
+      badge.hidden = false; badge.textContent = "View only";
+    } else { badge.hidden = true; }
+  }
+  // --- edit locks (check-out / check-in) ----------------------------------
+  function stopHeartbeat() { if (S.heartbeat) { clearInterval(S.heartbeat); S.heartbeat = null; } }
+  function startHeartbeat() {
+    stopHeartbeat();
+    S.heartbeat = setInterval(async () => {
+      if (!S.iHoldLock || !S.lockProjectId) return;
+      try {
+        const r = await Api.lockRenew(S.lockProjectId);
+        if (r && r.ok === false) { S.iHoldLock = false; S.lockedByOther = true; S.lockHolder = r.lock; stopHeartbeat(); applyAccess(); status("Your edit lock was taken over — the project is now read-only.", true); }
+      } catch (e) { /* transient; keep trying */ }
+    }, 30000);
+  }
+  async function refreshLock() {
+    stopHeartbeat();
+    S.iHoldLock = false; S.lockedByOther = false; S.lockHolder = null;
+    if (S.authRequired && S.project && S.canWrite) {
+      try {
+        const r = await Api.lock(S.project.id);
+        if (r && r.ok) { S.iHoldLock = true; S.lockHolder = r.lock; S.lockProjectId = S.project.id; startHeartbeat(); }
+        else if (r) { S.lockedByOther = true; S.lockHolder = r.lock; }
+      } catch (e) { /* treat as editable */ }
+    }
+    applyAccess();
+  }
+  async function releaseLock() {
+    stopHeartbeat();
+    const pid = S.lockProjectId;
+    S.iHoldLock = false; S.lockProjectId = null;
+    if (S.authRequired && pid) { try { await Api.unlock(pid); } catch (e) { /* ignore */ } }
+  }
+  async function takeOver() {
+    try {
+      const r = await Api.lock(S.project.id, true);
+      if (r && r.ok) { S.lockedByOther = false; S.iHoldLock = true; S.lockHolder = r.lock; S.lockProjectId = S.project.id; startHeartbeat(); applyAccess(); status("You took over editing."); }
+      else status("Couldn't take over the lock.", true);
+    } catch (e) { status("Take over failed: " + e.message, true); }
   }
   // owner/admin: choose which users can access the project and at what level
   async function shareProject() {
@@ -1343,6 +1407,7 @@
     });
   }
   $("logoutBtn").addEventListener("click", async () => {
+    await releaseLock();
     try { await Api.logout(); } catch (e) { /* ignore */ }
     location.reload();
   });

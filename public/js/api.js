@@ -29,6 +29,10 @@
     // users & sharing
     users: () => req("GET", "/api/users"),
     setMembers: (id, members) => req("PUT", "/api/projects/" + id + "/members", { members }),
+    // edit locks (check-out / check-in)
+    lock: (id, force) => req("POST", "/api/projects/" + id + "/lock", force ? { force: true } : {}),
+    lockRenew: (id) => req("POST", "/api/projects/" + id + "/lock/renew", {}),
+    unlock: (id, force) => req("DELETE", "/api/projects/" + id + "/lock" + (force ? "?force=1" : "")),
     // configuration management (history + baselines)
     history: (id) => req("GET", "/api/projects/" + id + "/history"),
     version: (id, rev) => req("GET", "/api/projects/" + id + "/history/" + rev),
