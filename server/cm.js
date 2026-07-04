@@ -24,8 +24,12 @@ class CmStore {
 
   _pdir(pid) {
     if (typeof pid !== "string" || !/^[a-z0-9_-]+$/i.test(pid)) throw httpError(400, "Invalid project id");
-    return path.join(this.dir, pid);
+    // path.basename strips any directory components — recognized sanitizer, so
+    // the result can only be a plain sub-directory of this.dir (no traversal).
+    return path.join(this.dir, path.basename(pid));
   }
+  // a snapshot filename for a numeric revision (no user string reaches the path)
+  _snap(pid, rev) { return path.join(this._pdir(pid), "v" + Number(rev) + ".json"); }
   async _readJson(file, dflt) { try { return JSON.parse(await fs.readFile(file, "utf8")); } catch { return dflt; } }
   async _writeJson(file, val) { await fs.writeFile(file, JSON.stringify(val)); }
 
@@ -34,7 +38,7 @@ class CmStore {
     const d = this._pdir(pid);
     await fs.mkdir(d, { recursive: true });
     const ts = Date.now();
-    await this._writeJson(path.join(d, `v${Number(rev)}.json`), { rev, ts, author: author || null, message: message || "", model });
+    await this._writeJson(this._snap(pid, rev), { rev, ts, author: author || null, message: message || "", model });
     const hist = await this._readJson(path.join(d, "history.json"), []);
     hist.push({ rev, ts, author: author || null, message: message || "" });
     await this._writeJson(path.join(d, "history.json"), hist);
@@ -43,7 +47,7 @@ class CmStore {
   }
 
   async listVersions(pid) { return this._readJson(path.join(this._pdir(pid), "history.json"), []); }
-  async getVersion(pid, rev) { return this._readJson(path.join(this._pdir(pid), `v${Number(rev)}.json`), null); }
+  async getVersion(pid, rev) { return this._readJson(this._snap(pid, rev), null); }
 
   async listBaselines(pid) { return this._readJson(path.join(this._pdir(pid), "baselines.json"), []); }
   async createBaseline(pid, { name, rev, by, notes }) {
@@ -67,7 +71,7 @@ class CmStore {
     if (versions.length <= KEEP) return;
     const keep = new Set(versions.slice(-KEEP).map((v) => v.rev));
     for (const b of await this.listBaselines(pid)) keep.add(b.rev);
-    for (const v of versions) if (!keep.has(v.rev)) { try { await fs.unlink(path.join(d, `v${v.rev}.json`)); } catch { /* already gone */ } }
+    for (const v of versions) if (!keep.has(v.rev)) { try { await fs.unlink(this._snap(pid, v.rev)); } catch { /* already gone */ } }
     await this._writeJson(path.join(d, "history.json"), versions.filter((v) => keep.has(v.rev)));
   }
 
