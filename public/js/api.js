@@ -29,6 +29,12 @@
     // users & sharing
     users: () => req("GET", "/api/users"),
     setMembers: (id, members) => req("PUT", "/api/projects/" + id + "/members", { members }),
+    // configuration management (history + baselines)
+    history: (id) => req("GET", "/api/projects/" + id + "/history"),
+    version: (id, rev) => req("GET", "/api/projects/" + id + "/history/" + rev),
+    restore: (id, rev) => req("POST", "/api/projects/" + id + "/restore", { rev }),
+    createBaseline: (id, name, rev, notes) => req("POST", "/api/projects/" + id + "/baselines", { name, rev, notes }),
+    deleteBaseline: (id, bid) => req("DELETE", "/api/projects/" + id + "/baselines/" + bid),
     // admin
     adminUsers: () => req("GET", "/api/admin/users"),
     adminCreateUser: (username, password, role) => req("POST", "/api/admin/users", { username, password, role }),

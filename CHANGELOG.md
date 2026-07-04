@@ -6,6 +6,14 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- **Version history & baselines (Phase 4a of the multi-user platform).** Every
+  save now records an immutable **snapshot** of the model (author, time, optional
+  message). A new **History** dialog lists every version and lets you **restore**
+  any of them — restore is *forward* (it re-saves the old model as a new revision,
+  so nothing is ever lost) — and create/delete named **baselines** (e.g. "PDR")
+  that pin a revision. History is stored under `<DATA_DIR>/.cm/`; snapshots are
+  pruned to the most recent 100 per project, but baselined revisions are kept.
+  (Project **check-out/locking** follows in 4b.)
 - **Admin page (Phase 3 of the multi-user platform).** Global admins get an
   **Admin** button opening a user-management dialog: **add / delete / disable /
   enable users**, **promote/demote** (admin ↔ user), and **reset passwords**, with

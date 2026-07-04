@@ -1354,7 +1354,50 @@
     if (info.user) showUser(info.user);
     refreshConnection();
   }
+  // ---------------------------------------------------------------- history / baselines
+  async function historyDialog() {
+    if (!S.project) return status("Open a project first.", true);
+    let data;
+    try { data = await Api.history(S.project.id); } catch (e) { return status("Couldn't load history: " + e.message, true); }
+    const baselineRevs = new Set(data.baselines.map((b) => b.rev));
+    const w = S.canWrite, mg = S.canManage;
+    const baseSec = data.baselines.length
+      ? `<div class="hist-sec"><h4>Baselines</h4>` + data.baselines.map((b) =>
+        `<div class="hist-row" data-baseline="${esc(b.id)}"><span class="hn">★ ${esc(b.name)}</span>
+           <span class="hmeta">r${b.rev}${b.by ? " · " + esc(b.by) : ""} · ${esc(fmtDate(b.ts))}${b.notes ? " · " + esc(b.notes) : ""}</span>
+           <span class="hact">${w ? `<button class="mini2" data-act="restore" data-rev="${b.rev}">Restore</button>` : ""}${mg ? `<button class="mini2 del" data-act="delbase">Delete</button>` : ""}</span></div>`).join("") + `</div>`
+      : "";
+    const verSec = `<div class="hist-sec"><h4>Versions <span class="muted" style="text-transform:none;font-weight:400">(restore saves forward — nothing is lost)</span></h4><div class="hist-list">` +
+      (data.versions.length ? data.versions.map((v) =>
+        `<div class="hist-row"><span class="hn">r${v.rev}${baselineRevs.has(v.rev) ? " ★" : ""}</span>
+           <span class="hmeta">${v.author ? esc(v.author) + " · " : ""}${esc(fmtDate(v.ts))}${v.message ? " · " + esc(v.message) : ""}</span>
+           <span class="hact">${w ? `<button class="mini2" data-act="restore" data-rev="${v.rev}">Restore</button> <button class="mini2" data-act="baseline" data-rev="${v.rev}">Baseline…</button>` : ""}</span></div>`).join("") : `<p class="muted">No history yet.</p>`) +
+      `</div></div>`;
+    const m = modal("Version history", baseSec + verSec, [{ label: "Close", act: "close" }]);
+    m.querySelectorAll('[data-act="restore"]').forEach((b) => b.addEventListener("click", async () => {
+      try { await Api.restore(S.project.id, +b.dataset.rev); closeModal(); await openProject(S.project.id); status(`Restored r${b.dataset.rev} as a new version.`); }
+      catch (e) { status("Restore failed: " + e.message, true); }
+    }));
+    m.querySelectorAll('[data-act="baseline"]').forEach((b) => b.addEventListener("click", () => baselineDialog(+b.dataset.rev, () => { closeModal(); historyDialog(); })));
+    m.querySelectorAll('[data-act="delbase"]').forEach((b) => b.addEventListener("click", async () => {
+      try { await Api.deleteBaseline(S.project.id, b.closest("[data-baseline]").dataset.baseline); closeModal(); historyDialog(); }
+      catch (e) { status(e.message, true); }
+    }));
+  }
+  function baselineDialog(rev, after) {
+    const body = `<div class="field"><label>Baseline name</label><input type="text" id="blName" value="Baseline r${rev}"></div>
+      <div class="field"><label>Notes (optional)</label><input type="text" id="blNotes"></div><div class="login-err" id="blErr" hidden></div>`;
+    const m = modal(`Baseline revision r${rev}`, body, [{ label: "Cancel", act: "close" }, { label: "Create", act: "ok", primary: true }]);
+    m.querySelector('[data-act="ok"]').addEventListener("click", async () => {
+      const err = m.querySelector("#blErr"); err.hidden = true;
+      try { await Api.createBaseline(S.project.id, m.querySelector("#blName").value, rev, m.querySelector("#blNotes").value); closeModal(); if (after) after(); status("Baseline created."); }
+      catch (e) { err.textContent = e.message; err.hidden = false; }
+    });
+    m.querySelector("#blName").select();
+  }
+
   $("shareBtn").addEventListener("click", shareProject);
   $("adminBtn").addEventListener("click", adminDialog);
+  $("historyBtn").addEventListener("click", historyDialog);
   initAuth();
 })();

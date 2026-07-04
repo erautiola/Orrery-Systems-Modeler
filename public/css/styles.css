@@ -201,6 +201,15 @@ table.grid td.cellmark .mk { color: var(--accent); font-weight: 700; }
 .proj-row .trash { color: var(--bad); background: none; border: none; cursor: pointer; font-size: 15px; }
 .empty { color: var(--muted); text-align: center; padding: 24px; }
 
+/* history / baselines dialog */
+.hist-sec { margin-bottom: 14px; }
+.hist-sec h4 { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 0 0 6px; }
+.hist-list { max-height: 42vh; overflow: auto; }
+.hist-row { display: flex; align-items: center; gap: 10px; padding: 6px 4px; border-bottom: 1px solid var(--border); font-size: 13px; }
+.hist-row .hn { min-width: 90px; font-weight: 600; }
+.hist-row .hmeta { flex: 1; color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hist-row .hact { display: flex; gap: 4px; }
+
 /* admin: user-management dialog */
 .admin-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; font-size: 13px; color: var(--muted); }
 .admin-table-wrap { overflow: auto; max-height: 55vh; }
