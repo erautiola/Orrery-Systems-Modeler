@@ -16,11 +16,13 @@ const express = require("express");
 const { Store } = require("./store");
 const { UserStore, httpError } = require("./users");
 const { SessionStore } = require("./sessions");
+const { CmStore } = require("./cm");
 const Permissions = require(path.join(__dirname, "..", "public", "js", "permissions.js"));
 
 const PORT = process.env.PORT || 8137;
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, "..", "data");
 const AUTH_DIR = path.join(DATA_DIR, ".auth"); // kept out of the project library
+const CM_DIR = path.join(DATA_DIR, ".cm");     // version history + baselines
 const PUBLIC_DIR = path.join(__dirname, "..", "public");
 
 // Auth is OFF by default so existing single-team installs keep working on
@@ -32,6 +34,7 @@ const SID = "osm_sid";
 const store = new Store(DATA_DIR);
 const users = new UserStore(AUTH_DIR);
 const sessions = new SessionStore(AUTH_DIR);
+const cm = new CmStore(CM_DIR);
 const app = express();
 app.use(express.json({ limit: "32mb" }));
 
@@ -136,9 +139,12 @@ api.get("/projects", wrap(async (req, res) => {
   res.json(list);
 }));
 
+const who = (req) => (req.user && req.user.username) || null;
+
 api.post("/projects", wrap(async (req, res) => {
   const { name, model } = req.body || {};
   const p = await store.create(name, model, req.user && req.user.id); // creator becomes owner
+  await cm.recordVersion(p.id, { rev: p.rev, author: who(req), message: "Created", model: p.model });
   res.status(201).json(p);
 }));
 
@@ -147,12 +153,45 @@ api.get("/projects/:id", requirePerm("read"), wrap(async (req, res) => {
 }));
 
 api.put("/projects/:id", requirePerm("write"), wrap(async (req, res) => {
-  const { name, model, rev } = req.body || {};
-  res.json(await store.save(req.params.id, { name, model, rev }));
+  const { name, model, rev, message } = req.body || {};
+  const saved = await store.save(req.params.id, { name, model, rev });
+  if (model != null) await cm.recordVersion(saved.id, { rev: saved.rev, author: who(req), message, model: saved.model });
+  res.json(saved);
 }));
 
 api.patch("/projects/:id", requirePerm("manage"), wrap(async (req, res) => {
   res.json(await store.rename(req.params.id, (req.body || {}).name));
+}));
+
+// --- configuration management: history, restore, baselines ----------------
+api.get("/projects/:id/history", requirePerm("read"), wrap(async (req, res) => {
+  res.json({ versions: (await cm.listVersions(req.params.id)).slice().reverse(), baselines: await cm.listBaselines(req.params.id) });
+}));
+api.get("/projects/:id/history/:rev", requirePerm("read"), wrap(async (req, res) => {
+  const v = await cm.getVersion(req.params.id, req.params.rev);
+  if (!v) throw httpError(404, "No such version");
+  res.json(v);
+}));
+api.post("/projects/:id/restore", requirePerm("write"), wrap(async (req, res) => {
+  const rev = Number((req.body || {}).rev);
+  const snap = await cm.getVersion(req.params.id, rev);
+  if (!snap) throw httpError(404, "No such version");
+  // restore forward: save the old model as a brand-new revision (never destructive)
+  const saved = await store.save(req.params.id, { model: snap.model, rev: req._project.rev });
+  await cm.recordVersion(saved.id, { rev: saved.rev, author: who(req), message: `Restored from r${rev}`, model: saved.model });
+  res.json(saved);
+}));
+api.get("/projects/:id/baselines", requirePerm("read"), wrap(async (req, res) => {
+  res.json(await cm.listBaselines(req.params.id));
+}));
+api.post("/projects/:id/baselines", requirePerm("write"), wrap(async (req, res) => {
+  const { name, rev, notes } = req.body || {};
+  const b = await cm.createBaseline(req.params.id, { name, rev: rev != null ? Number(rev) : req._project.rev, by: who(req), notes });
+  res.status(201).json(b);
+}));
+api.delete("/projects/:id/baselines/:bid", requirePerm("manage"), wrap(async (req, res) => {
+  await cm.removeBaseline(req.params.id, req.params.bid);
+  res.status(204).end();
 }));
 
 // share: set the project's members (owner/admin only)
@@ -165,6 +204,7 @@ api.put("/projects/:id/members", requirePerm("manage"), wrap(async (req, res) =>
 
 api.delete("/projects/:id", requirePerm("manage"), wrap(async (req, res) => {
   await store.remove(req.params.id);
+  await cm.removeProject(req.params.id);
   res.status(204).end();
 }));
 

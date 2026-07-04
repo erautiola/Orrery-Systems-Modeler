@@ -13,6 +13,16 @@ buttons in the top bar or **Ctrl+Z** / **Ctrl+Y** (also **Ctrl+Shift+Z** to redo
 A burst of typing in a field collapses into a single undo step. History is
 per‑open‑project and resets when you open or create a project.
 
+## Version history & baselines
+
+Undo/redo is your local editing history; **Version history** is the durable,
+server‑side record. Every **Save** snapshots the whole model. Open **History**
+(top bar) to see every version (who saved it and when), **Restore** any of them —
+restoring re‑saves that model as a *new* version, so nothing is ever lost — and
+mark named **baselines** (e.g. "PDR", "v1.0") that pin a revision for release
+traceability. Snapshots are pruned to the most recent 100, but baselined
+revisions are always kept.
+
 ## Validation
 
 Click **✓ Validate** in the top bar to check the model. Issues are grouped by
