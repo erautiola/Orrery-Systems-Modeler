@@ -5,6 +5,8 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-07-03
+
 ### Added
 - **Project check-out / edit locks (Phase 4b of the multi-user platform).** When
   authentication is on, opening a project **checks it out** for exclusive editing;
@@ -228,6 +230,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - Documentation set with embedded PlantUML UML & SysML diagrams, an importable
   self-model XMI, and CI/CodeQL/Dependency-Review/Dependabot pipelines.
 
+[0.3.0]: https://github.com/erautiola/Orrery-Systems-Modeler/releases/tag/v0.3.0
 [0.2.0]: https://github.com/erautiola/Orrery-Systems-Modeler/releases/tag/v0.2.0
 [0.1.6]: https://github.com/erautiola/Orrery-Systems-Modeler/releases/tag/v0.1.6
 [0.1.5]: https://github.com/erautiola/Orrery-Systems-Modeler/releases/tag/v0.1.5
